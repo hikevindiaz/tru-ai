@@ -29,7 +29,7 @@ const handleLogin = async (e) => {
 };
 
 export const metadata: Metadata = {
-  title: "Login",
+  title: "Login | Link AI",
   description: "Login to your account",
 };
 

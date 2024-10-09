@@ -1,7 +1,10 @@
 "use client";
 
 import { useState } from 'react';
-import { magic } from '@/lib/magic';
+import { magic } from '@/lib/magic'; // Ensure this is correctly initialized
+import Cookies from 'js-cookie';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faMagicWandSparkles } from '@fortawesome/free-solid-svg-icons'; // Import the magic wand icon
 
 export default function MagicLoginForm() {
   const [email, setEmail] = useState('');
@@ -15,6 +18,7 @@ export default function MagicLoginForm() {
       const didToken = await magic.auth.loginWithMagicLink({ email });
       if (didToken) {
         console.log('Login successful:', didToken);
+        Cookies.set('auth_token', didToken, { expires: 1 }); // Store token in cookies
         window.location.href = '/dashboard'; // Redirect to dashboard
       }
     } catch (error) {
@@ -61,7 +65,12 @@ export default function MagicLoginForm() {
           background: '#0075FF',
         }}
       >
-        {loading ? 'Loading...' : 'Send Magic Link'}
+        {loading ? 'Loading...' : (
+          <>
+            <FontAwesomeIcon icon={faMagicWandSparkles} className="mr-2" />
+            Send Magic Link
+          </>
+        )}
       </button>
     </form>
   );
