@@ -10,7 +10,7 @@ export function Background() {
 
 const styles: { [key: string]: React.CSSProperties } = {
     backgroundMain: {
-        width: "100vw",
+        width: "100%",
         minHeight: "100vh",
         position: "fixed",
         zIndex: 1,
@@ -18,42 +18,34 @@ const styles: { [key: string]: React.CSSProperties } = {
         justifyContent: "center",
         padding: "120px 24px 160px 24px",
         pointerEvents: "none",
+        background: "linear-gradient(159deg, #0F123B 14.25%, #090D2E 56.45%, #020515 86.14%)",
     },
     backgroundMainBefore: {
-        background: "radial-gradient(circle, rgba(2, 0, 36, 0) 0, #fafafa 100%)",
+        background: "none",
         position: "absolute",
         content: '""',
-        zIndex: 1,  // Ensure this is behind the content
+        zIndex: 1,
         width: "100%",
         height: "100%",
         top: 0,
     },
     backgroundMainAfter: {
         content: '""',
-        backgroundImage: "url(https://assets.dub.co/misc/grid.svg)",
-        zIndex: 2,  // Ensure this is behind the content but in front of backgroundMainBefore
+        backgroundImage: "none",
+        zIndex: 2,
         position: "absolute",
         width: "100%",
         height: "100%",
         top: 0,
-        opacity: 0.4,
-        filter: "invert(1)",
+        opacity: 0,
     },
     backgroundContent: {
-        zIndex: 3,  // Ensure this is in front of all background elements
+        zIndex: 3,
         width: "100%",
         maxWidth: "640px",
-        backgroundImage: `radial-gradient(at 27% 37%, hsla(215, 98%, 61%, 1) 0px, transparent 0%), 
-                          radial-gradient(at 97% 21%, hsla(125, 98%, 72%, 1) 0px, transparent 50%),
-                          radial-gradient(at 52% 99%, hsla(354, 98%, 61%, 1) 0px, transparent 50%),
-                          radial-gradient(at 10% 29%, hsla(256, 96%, 67%, 1) 0px, transparent 50%),
-                          radial-gradient(at 97% 96%, hsla(38, 60%, 74%, 1) 0px, transparent 50%),
-                          radial-gradient(at 33% 50%, hsla(222, 67%, 73%, 1) 0px, transparent 50%),
-                          radial-gradient(at 79% 53%, hsla(343, 68%, 79%, 1) 0px, transparent 50%)`,
         position: "absolute",
         height: "100%",
-        filter: "blur(100px) saturate(150%)",
         top: "80px",
-        opacity: 0.15,
+        opacity: 0,
     },
 };

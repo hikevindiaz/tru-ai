@@ -2,13 +2,13 @@
 
 import { useState } from "react";
 import { signIn } from "next-auth/react";
-import { useSearchParams } from "next/navigation"
+import { useSearchParams } from "next/navigation";
 import LoadingDots from "@/components/loading-dots";
 import { Icons } from "./icons";
 
 export default function GoogleLoginForm() {
   const [loading, setLoading] = useState(false);
-  const searchParams = useSearchParams()
+  const searchParams = useSearchParams();
 
   return (
     <form
@@ -18,15 +18,15 @@ export default function GoogleLoginForm() {
         await signIn("google", {
           redirect: false,
           callbackUrl: searchParams?.get("from") || "/welcome",
-        })
+        });
       }}
-      className="flex flex-col space-y-4 px-4 sm:px-16"
+      className="flex flex-col space-y-4"
     >
       <button
         disabled={loading}
         className={`${loading
           ? "cursor-not-allowed border-gray-200 bg-gray-100"
-          : "border-black bg-black text-black bg-white hover:text-white hover:bg-black"
+          : "border-black bg-white text-black hover:text-white hover:bg-black"
           } flex h-10 w-full items-center justify-center rounded-md border text-sm transition-all focus:outline-none`}
       >
         {loading ? (
