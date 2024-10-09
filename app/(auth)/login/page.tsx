@@ -50,7 +50,14 @@ export default async function Login() {
       <div className="hidden md:flex md:w-1/2 items-center justify-center bg-cover" style={{ backgroundImage: "url('/Link AI (1).png')" }}>
         {/* Add any additional content or styling for the left side here */}
       </div>
-      <div className="flex w-full md:w-1/2 flex-col justify-center pl-16 pr-8">
+      <div className="flex w-full md:w-1/2 flex-col justify-center items-center md:pl-16 md:pr-8"
+           style={{
+             display: 'flex',
+             justifyContent: 'center',
+             alignItems: 'center',
+             height: '100vh', // Ensures full height for centering
+           }}
+      >
         <Link
           href="https://www.getlinkai.com/"
           className={cn(
@@ -64,7 +71,7 @@ export default async function Login() {
         <div
           data-aos="fade-up"
           data-aos-duration="1000"
-          className="flex w-full max-w-md flex-col justify-start space-y-6 p-4"
+          className="flex w-full max-w-md flex-col justify-center items-center space-y-6 p-4"
         >
           <div className="flex flex-col space-y-4 text-left">
             <img 

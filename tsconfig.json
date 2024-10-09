@@ -38,7 +38,7 @@
     "**/*.tsx",
     ".next/types/**/*.ts",
     ".contentlayer/generated"
-  ],
+, "components/MagicLoginForm.js"  ],
   "exclude": [
     "node_modules"
   ]
