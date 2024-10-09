@@ -13,7 +13,6 @@ import GoogleLoginForm from "@/components/google-login-form";
 export const metadata: Metadata = {
   title: "Login",
   description: "Login to your account",
-}
 
 export default async function Login() {
   const user = await getCurrentUser()
