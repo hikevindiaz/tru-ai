@@ -20,8 +20,8 @@
 
 @layer base {
   :root {
-    --background: linear-gradient(159deg, #0F123B 14.25%, #090D2E 56.45%, #020515 86.14%);
-    --foreground: 222.2 47.4% 11.2%;
+    --background: linear-gradient(159deg, #020515 14.25%, #0F123B 86.75%);
+    --foreground: 0 0% 100%; /* White text */
 
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
@@ -32,8 +32,8 @@
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 47.4% 11.2%;
+    --card: #0F123B; /* Solid color for cards */
+    --card-foreground: 0 0% 100%; /* White text for cards */
 
     --primary: 222.2 47.4% 11.2%;
     --primary-foreground: 210 40% 98%;
@@ -60,6 +60,8 @@
 
   body {
     @apply bg-background text-foreground;
+    background: var(--background);
+    backdrop-filter: blur(10px);
     font-feature-settings: "rlig" 1, "calt" 1;
     margin: 0;
     padding: 0;
@@ -67,4 +69,25 @@
     height: 100%;
     overflow-x: hidden;
   }
+
+  .card {
+    background-color: var(--card) !important; /* Ensure solid background */
+    color: var(--card-foreground);
+    border-radius: 20px;
+    /* Remove backdrop-filter if causing transparency issues */
+  }
+
+  .button {
+    background-color: #0075FF; /* Blue background */
+    color: white; /* White text */
+    padding: 0.5rem 1rem; /* Example padding */
+    border-radius: 0.25rem; /* Example border radius */
+    transition: background-color 0.3s; /* Example transition */
+}
+
+.button:hover {
+    background-color: #005bb5; /* Darker blue on hover */
+}
+
+
 }

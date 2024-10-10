@@ -15,7 +15,7 @@ export const dashboardConfig: DashboardConfig = {
             icon: "dashboard",
         },
         {
-            title: "Chatbots",
+            title: "LinkReps",
             href: "/dashboard/chatbots",
             icon: "bot",
         },
@@ -25,7 +25,7 @@ export const dashboardConfig: DashboardConfig = {
             icon: "post",
         },
         {
-            title: "Files",
+            title: "LinkBrain",
             href: "/dashboard/files",
             icon: "folder",
         },

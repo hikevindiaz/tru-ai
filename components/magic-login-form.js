@@ -1,14 +1,18 @@
 "use client";
 
 import { useState } from 'react';
-import { magic } from '@/lib/magic'; // Ensure this is correctly initialized
+import { signIn } from 'next-auth/react';
+import { useSearchParams } from 'next/navigation';
 import Cookies from 'js-cookie';
+import LoadingDots from "@/components/loading-dots";
+import { magic } from '@/lib/magic'; // Ensure this is correctly initialized
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMagicWandSparkles } from '@fortawesome/free-solid-svg-icons'; // Import the magic wand icon
 
 export default function MagicLoginForm() {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
+  const searchParams = useSearchParams();
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -19,7 +23,15 @@ export default function MagicLoginForm() {
       if (didToken) {
         console.log('Login successful:', didToken);
         Cookies.set('auth_token', didToken, { expires: 1 }); // Store token in cookies
-        window.location.href = '/dashboard'; // Redirect to dashboard
+
+        // Use next-auth's signIn for consistency
+        await signIn('credentials', {
+          redirect: false,
+          callbackUrl: searchParams?.get("from") || "/welcome",
+          didToken,
+        });
+
+        window.location.href = searchParams?.get("from") || "/welcome"; // Redirect to the desired page
       }
     } catch (error) {
       console.error('Login failed:', error);
@@ -65,7 +77,9 @@ export default function MagicLoginForm() {
           background: '#0075FF',
         }}
       >
-        {loading ? 'Loading...' : (
+        {loading ? (
+          <LoadingDots color="#808080" />
+        ) : (
           <>
             <FontAwesomeIcon icon={faMagicWandSparkles} className="mr-2" />
             Send Magic Link

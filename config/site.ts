@@ -1,10 +1,10 @@
 import { SiteConfig } from "@/types"
 
 export const siteConfig: SiteConfig = {
-  name: "OpenAssistantGPT",
+  name: "Link AI",
   description:
-    "An Open-Source SaaS Platform for Crafting Chatbots with OpenAI's Assistant.",
-  url: "https://www.openassistantgpt.io/",
+    "AI-Powered Conversations for Every Business Need.",
+  url: "https://www.getlinkai.com/",
   ogImage: "https://www.openassistantgpt.io/dashboard.png",
   links: {
     twitter: "https://twitter.com/oassistantgpt",

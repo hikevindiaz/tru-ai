@@ -1,4 +1,3 @@
-
 "use client"
 
 import Link from "next/link"
@@ -6,9 +5,9 @@ import { usePathname } from "next/navigation"
 
 import { SidebarNavItem } from "@/types"
 import { cn } from "@/lib/utils"
-import { Icons } from "@/components/icons"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card"
 import { UpgradePlanButton } from "./upgrade-plan-button"
+import { Icons } from "@/components/icons" // Ensure this path is correct
 
 interface DashboardNavProps {
     items: SidebarNavItem[]
@@ -22,8 +21,21 @@ export function DashboardNav({ items }: DashboardNavProps) {
     }
 
     return (
-        <nav className="flex flex-col justify-between h-full gap-2">
-            <div>
+        <nav className="flex flex-col justify-between h-full">
+            <div className="flex flex-col items-center">
+                <img src="/LINK LOGO WHITE.png" alt="Link AI Logo" className="h-8 w-auto mb-1" />
+                <svg xmlns="http://www.w3.org/2000/svg" width="234" height="1" viewBox="0 0 234 1" fill="none" className="mb-2">
+                    <path d="M0 0.5H233.25" stroke="url(#paint0_linear_1702_10769)"/>
+                    <defs>
+                        <linearGradient id="paint0_linear_1702_10769" x1="0" y1="0.5" x2="231" y2="0.5" gradientUnits="userSpaceOnUse">
+                            <stop stopColor="#E0E1E2" stopOpacity="0"/>
+                            <stop offset="0.5" stopColor="#E0E1E2"/>
+                            <stop offset="1" stopColor="#E0E1E2" stopOpacity="0.15625"/>
+                        </linearGradient>
+                    </defs>
+                </svg>
+            </div>
+            <div className="flex flex-col gap-1">
                 {items.map((item, index) => {
                     const Icon = Icons[item.icon || "arrowRight"]
                     return (

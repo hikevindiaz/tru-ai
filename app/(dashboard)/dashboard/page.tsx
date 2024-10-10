@@ -81,7 +81,7 @@ export default async function DashboardPage() {
   // Count messages for each day
   messages.forEach(message => {
     const messageDate = message.createdAt.toISOString().split('T')[0];
-    const dataEntry = data.find(entry => entry.name === messageDate);
+    const dataEntry = data.find((entry: any) => entry.name === messageDate);
     if (dataEntry) {
       dataEntry.total++;
     }
