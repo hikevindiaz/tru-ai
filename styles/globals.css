@@ -12,7 +12,7 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: #d6dee1;
+  background-color: #106685;
   border-radius: 20px;
   border: 6px solid transparent;
   background-clip: content-box;
@@ -21,7 +21,7 @@
 @layer base {
   :root {
     --background: linear-gradient(159deg, #020515 14.25%, #0F123B 86.75%);
-    --foreground: 0 0% 100%; /* White text */
+    --foreground: 255 255 255; /* White text */
 
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
@@ -33,7 +33,7 @@
     --input: 214.3 31.8% 91.4%;
 
     --card: #0F123B; /* Solid color for cards */
-    --card-foreground: 0 0% 100%; /* White text for cards */
+    --card-foreground: 255 255 255; /* White text for cards */
 
     --primary: 222.2 47.4% 11.2%;
     --primary-foreground: 210 40% 98%;
@@ -74,7 +74,6 @@
     background-color: var(--card) !important; /* Ensure solid background */
     color: var(--card-foreground);
     border-radius: 20px;
-    /* Remove backdrop-filter if causing transparency issues */
   }
 
   .button {
@@ -83,11 +82,9 @@
     padding: 0.5rem 1rem; /* Example padding */
     border-radius: 0.25rem; /* Example border radius */
     transition: background-color 0.3s; /* Example transition */
-}
+  }
 
-.button:hover {
-    background-color: #005bb5; /* Darker blue on hover */
-}
-
-
+  .button:hover {
+    background-color: #969799; /* Darker blue on hover */
+  }
 }

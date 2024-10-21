@@ -7,7 +7,7 @@ import { SidebarNavItem } from "@/types"
 import { cn } from "@/lib/utils"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card"
 import { UpgradePlanButton } from "./upgrade-plan-button"
-import { Icons } from "@/components/icons" // Ensure this path is correct
+import { Icons } from "@/components/icons"
 
 interface DashboardNavProps {
     items: SidebarNavItem[]
@@ -21,10 +21,10 @@ export function DashboardNav({ items }: DashboardNavProps) {
     }
 
     return (
-        <nav className="flex flex-col justify-between h-full">
+        <nav className="flex flex-col justify-between h-8"> {/* Adjusted h-8 to h-full for full height */}
             <div className="flex flex-col items-center">
-                <img src="/LINK LOGO WHITE.png" alt="Link AI Logo" className="h-8 w-auto mb-1" />
-                <svg xmlns="http://www.w3.org/2000/svg" width="234" height="1" viewBox="0 0 234 1" fill="none" className="mb-2">
+                <img src="/LINK LOGO WHITE.png" alt="Link AI Logo" className="h-8 w-auto mb-2" />
+                <svg xmlns="http://www.w3.org/2000/svg" width="234" height="1" viewBox="0 0 234 1" fill="none" className="mb-4">
                     <path d="M0 0.5H233.25" stroke="url(#paint0_linear_1702_10769)"/>
                     <defs>
                         <linearGradient id="paint0_linear_1702_10769" x1="0" y1="0.5" x2="231" y2="0.5" gradientUnits="userSpaceOnUse">
@@ -35,7 +35,7 @@ export function DashboardNav({ items }: DashboardNavProps) {
                     </defs>
                 </svg>
             </div>
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-1 pt-2"> {/* Added pt-2 for padding-top after the SVG */}
                 {items.map((item, index) => {
                     const Icon = Icons[item.icon || "arrowRight"]
                     return (
@@ -56,7 +56,7 @@ export function DashboardNav({ items }: DashboardNavProps) {
                     )
                 })}
             </div>
-            <Card>
+            <Card className="pt-4"> {/* Added pt-4 for padding-top on the card */}
                 <CardHeader>
                     <CardTitle className="text-sm">Upgrade your plan</CardTitle>
                     <CardDescription className="text-xs">

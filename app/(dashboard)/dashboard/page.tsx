@@ -20,6 +20,7 @@ import { EmptyPlaceholder } from "@/components/empty-placeholder"
 import { InquiryItem } from "@/components/inquiry-item"
 import { ErrorShortItem } from "@/components/error-short-item"
 import { constructMetadata } from "@/lib/construct-metadata"
+import { UserAccountNav } from "@/components/user-account-nav" // Import UserAccountNav
 
 export const metadata = constructMetadata()
 
@@ -57,7 +58,6 @@ export default async function DashboardPage() {
     }
   })
 
-  // get message for each day for the last 7 days
   const messages = await db.message.findMany({
     where: {
       userId: user.id,
@@ -74,11 +74,10 @@ export default async function DashboardPage() {
   for (let i = 0; i < 30; i++) {
     const date = new Date();
     date.setDate(date.getDate() - i);
-    const formattedDate = date.toISOString().split('T')[0]; // Format date as 'YYYY-MM-DD'
+    const formattedDate = date.toISOString().split('T')[0];
     data.push({ name: formattedDate, total: 0 });
   }
 
-  // Count messages for each day
   messages.forEach(message => {
     const messageDate = message.createdAt.toISOString().split('T')[0];
     const dataEntry = data.find((entry: any) => entry.name === messageDate);
@@ -87,7 +86,6 @@ export default async function DashboardPage() {
     }
   });
 
-  // Reverse the data array to start from the oldest date
   data.reverse();
 
   const chatbotIds = await db.chatbot.findMany({
@@ -145,7 +143,10 @@ export default async function DashboardPage() {
   return (
     <DashboardShell>
       <DashboardHeader heading="Dashboard" text="Welcome to Your Chatbot Dashboard">
-        <ChatbotCreateButton />
+        <div className="flex items-center space-x-4">
+          <ChatbotCreateButton />
+          <UserAccountNav user={user} /> {/* Add UserAccountNav here */}
+        </div>
       </DashboardHeader>
       <div>
         {bots === 0 &&
