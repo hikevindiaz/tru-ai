@@ -45,7 +45,7 @@ export default async function ChatbotsPage() {
 
   return (
     <DashboardShell>
-      <DashboardHeader heading="Chatbots" text="Create and manage your chatbots.">
+      <DashboardHeader heading="LinkReps" text="Create and manage your chatbots.">
         <ChatbotCreateButton />
       </DashboardHeader>
       <div>

@@ -1,9 +1,9 @@
 import { Metadata } from "next";
 
 export function constructMetadata({
-    title = `OpenAssistantGPT - Build your own chatbot with OpenAI Assistant`,
-    description = `OpenAssistantGPT is the open-source platform for building chatbot using the OpenAI Assistant API. We offer seamless integration for effortlessly incorporating a chatbot into your website.`,
-    image = "https://openassistantgpt.io/thumbnail.png",
+    title = `Link AI - Start a New Conversation`,
+    description = `Use AI to start new conversations.`,
+    image = "app/favicon.ico",
     icons = [
         {
             rel: "apple-touch-icon",
@@ -55,7 +55,7 @@ export function constructMetadata({
             creator: "@oassistantgpt",
         },
         icons,
-        metadataBase: new URL('https://openassistantgpt.io'),
+        metadataBase: new URL('https://www.dashboard.getlinkai.com/'),
         ...(noIndex && {
             robots: {
                 index: false,

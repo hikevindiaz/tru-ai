@@ -23,8 +23,8 @@
     --background: linear-gradient(159deg, #020515 14.25%, #0F123B 86.75%);
     --foreground: 255 255 255; /* White text */
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 210 50% 20%;
+    --muted-foreground: 60 20% 94%;
 
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 47.4% 11.2%;
@@ -32,7 +32,7 @@
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
 
-    --card: #0F123B; /* Solid color for cards */
+    --card: linear-gradient(159deg, #020515 14.25%, #0F123B 86.75%); /* Solid color for cards */
     --card-foreground: 255 255 255; /* White text for cards */
 
     --primary: 222.2 47.4% 11.2%;
@@ -85,6 +85,6 @@
   }
 
   .button:hover {
-    background-color: #969799; /* Darker blue on hover */
+    background-color: #184090; /* Darker blue on hover */
   }
 }
