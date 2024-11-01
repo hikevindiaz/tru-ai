@@ -4,7 +4,7 @@ export const siteConfig: SiteConfig = {
   name: "Link AI",
   description:
     "AI-Powered Conversations for Every Business Need.",
-  url: "https://www.dashboard.getlinkai.com/",
+  url: "https://dashboard.getlinkai.com/",
   ogImage: "https://www.openassistantgpt.io/dashboard.png",
   links: {
     twitter: "https://twitter.com/oassistantgpt",

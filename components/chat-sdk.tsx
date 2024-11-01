@@ -83,8 +83,8 @@ export function Chat({ chatbot, defaultMessage, className, withExitX = false, cl
     <OpenAssistantGPTChat chatbot={{
       ...chatbot,
       displayFooterText: chatbot.displayBranding,
-      footerLink: 'https://openassistantgpt.io',
-      footerTextName: 'OpenAssistantGPT',
+      footerLink: 'https://getlinkai.com',
+      footerTextName: 'Link AI',
       chatbotLogoURL: chatbot.chatbotLogoURL || '',
     }} path={`/api/chatbots/${chatbot.id}/chat`} withExitX={withExitX} clientSidePrompt={clientSidePrompt} defaultMessage={defaultMessage} {...props} 
     onMessagesChange={handleMessagesChange}

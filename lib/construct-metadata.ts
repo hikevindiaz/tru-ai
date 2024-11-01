@@ -55,7 +55,7 @@ export function constructMetadata({
             creator: "@oassistantgpt",
         },
         icons,
-        metadataBase: new URL('https://www.dashboard.getlinkai.com/'),
+        metadataBase: new URL('https://dashboard.getlinkai.com/'),
         ...(noIndex && {
             robots: {
                 index: false,
