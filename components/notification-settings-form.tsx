@@ -134,7 +134,7 @@ export function NotificationSettingsForm({ user, inquiryNotificationEnabled, mar
                     <CardFooter>
                         <button
                             type="submit"
-                            className={cn(buttonVariants(), className)}
+                            className={cn(buttonVariants({ variant: "toggle" }), className)}
                             disabled={isSaving}
                         >
                             {isSaving && (

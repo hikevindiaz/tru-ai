@@ -66,13 +66,14 @@ export default async function CrawlingPage({ params }: CrawlerSettingsProps) {
             </DashboardHeader>
             {files?.length ?
                 <>
-                    <div className="divide-y divide-border rounded-md border">
+                    <div className="divide-y divide-border rounded-md border bg-custom">
                         {files.map((file) => (
                             <FileItem file={file} key={file.id} />
                         ))}
                     </div>
                     <StartCrawlingButton crawler={crawler} />
                 </>
+                //Added Custom BG
 
                 : <div className="grid gap-10">
                     <EmptyPlaceholder>

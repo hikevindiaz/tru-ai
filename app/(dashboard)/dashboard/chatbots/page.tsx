@@ -50,7 +50,7 @@ export default async function ChatbotsPage() {
       </DashboardHeader>
       <div>
         {bots?.length ? (
-          <div className="divide-y divide-border rounded-md border">
+          <div className="divide-y divide-border rounded-md border bg-custom">
             {bots.map((bot) => (
               <ChatbotItem key={bot.id} chatbot={bot} model={bot.model} />
             ))}

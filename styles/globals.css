@@ -24,7 +24,7 @@
     --foreground: 255 255 255; /* White text */
 
     --muted: 210 50% 20%;
-    --muted-foreground: 60 20% 94%;
+    --muted-foreground: black;
 
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 47.4% 11.2%;
@@ -35,11 +35,11 @@
     --card: linear-gradient(159deg, #020515 14.25%, #0F123B 86.75%); /* Solid color for cards */
     --card-foreground: 255 255 255; /* White text for cards */
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 210 100% 50%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 210 100% 40%;
+    --secondary-foreground: 0 0% 100%;
 
     --accent: 210 40% 96.1%;
     --accent-foreground: 222.2 47.4% 11.2%;
@@ -87,4 +87,62 @@
   .button:hover {
     background-color: #184090; /* Darker blue on hover */
   }
+
+  .chatbot-container {
+    background-color: #ffffff !important; /* Ensure white background */
+    color: #000000; /* Ensure text is visible */
+  }
+
+  /* Chatbot-specific styles */
+  .chatbot-page {
+    background-color: #ffffff !important; /* White background for chatbot page */
+    color: #000000; /* Ensure text is visible */
+  }
+
+  .chatbot-page .bg-background {
+    background-color: #ffffff !important; /* Ensure white background */
+  }
+
+  .chatbot-page .mx-auto {
+    background-color: #ffffff !important; /* Ensure white background */
+  }
+
+  .chatbot-page .fixed.inset-x-0.bottom-0 {
+    background-color: #ffffff !important; /* Ensure white background */
+  }
+
+  .chatbot-page .card {
+    background-color: #ffffff !important; /* Ensure white background for cards in chatbot */
+    color: #000000; /* Ensure text is visible */
+  }
+  .toggle-button {
+    background-color: hsl(var(--primary)) !important;
+    color: hsl(var(--primary-foreground)) !important;
+    border-radius: var(--radius);
+    transition: background-color 0.3s, color 0.3s;
+  }
+  
+  .toggle-button:hover {
+    background-color: hsl(var(--secondary)) !important;
+  }
+
+  .switch {
+    background-color: #0075FF !important; /* Bright blue background */
+    color: #FFFFFF !important; /* White text */
+    border-radius: var(--radius);
+    transition: background-color 0.3s, color 0.3s;
+  }
+  
+  .switch:checked {
+    background-color: #00C853 !important; /* Green when checked */
+  }
+  
+  .billing-card {
+    background-color: #0075FF !important; /* Bright blue background */
+  }
+
+  .bg-custom {
+  background-color: #3B82F6; /* Tailwind's bg-blue-500 */
+}
+  
 }

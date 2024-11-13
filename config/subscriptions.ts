@@ -10,12 +10,12 @@ export const freePlan: SubscriptionPlan = {
     maxFiles: 3,
     unlimitedMessages: false,
     maxMessagesPerMonth: 500,
-    basicCustomization: false,
-    userInquiries: false,
+    basicCustomization: true,
+    userInquiries: true,
 
-    brandingCustomization: false,
+    brandingCustomization: true,
 
-    chatFileAttachments: false,
+    chatFileAttachments: true,
 
     price: 0,
 }

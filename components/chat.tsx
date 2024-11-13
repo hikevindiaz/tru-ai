@@ -155,7 +155,7 @@ export function Chat({ chatbot, defaultMessage, className, withExitX = false, cl
   return (
     <>
       {chatbot.chatHistoryEnabled && <ChatHistory threads={threads} setThreadId={setThreadId} threadId={threadId} deleteThreadFromHistory={deleteThreadFromHistory}></ChatHistory>}
-      <CardHeader style={{ background: chatbot.chatHeaderBackgroundColor }} className="sticky z-30 top-0 border-b p-4">
+      <CardHeader style={{ background: #ffffff }} className="sticky z-30 top-0 border-b p-4">
         <div className="flex flex-row justify-between items-center">
           <h2 className="text-xl font-bold flex items-center h-10 gap-2">
             <div style={{ color: chatbot.chatHeaderTextColor }}>

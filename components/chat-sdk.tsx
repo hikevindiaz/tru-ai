@@ -35,25 +35,12 @@ export interface ClientSideChatbotProps {
 
   inquiryEnabled: boolean;
   inquiryLinkText: string;
-  inquiryTitle: string;
-  inquirySubtitle: string;
-  inquiryEmailLabel: string;
-  inquiryMessageLabel: string;
-  inquirySendButtonText: string;
-  inquiryAutomaticReplyText: string;
   inquiryDisplayLinkAfterXMessage: number;
-
-  chatHistoryEnabled: boolean;
-
   displayBranding: boolean;
-  chatFileAttachementEnabled: boolean;
-
-  maxCompletionTokens?: number;
-  maxPromptTokens?: number;
-
-  bannedIps: string[];
-  allowEveryone: boolean;
-  allowedIpRanges: string[];
+  className?: string;
+  withExitX?: boolean;
+  clientSidePrompt?: string;
+  chatBackgroundColor: string; // New prop for background color
 }
 
 interface ChatbotProps {
@@ -77,21 +64,31 @@ export function Chat({ chatbot, defaultMessage, className, withExitX = false, cl
     setThreadId(threadId || '');
   }
 
-  console.log(chatbot);
+  // Debugging: Log the background color
+  console.log("Chat Background Color:", chatbot.chatBackgroundColor);
 
   return (
-    <OpenAssistantGPTChat chatbot={{
-      ...chatbot,
-      displayFooterText: chatbot.displayBranding,
-      footerLink: 'https://getlinkai.com',
-      footerTextName: 'Link AI',
-      chatbotLogoURL: chatbot.chatbotLogoURL || '',
-    }} path={`/api/chatbots/${chatbot.id}/chat`} withExitX={withExitX} clientSidePrompt={clientSidePrompt} defaultMessage={defaultMessage} {...props} 
-    onMessagesChange={handleMessagesChange}
-    onThreadIdChange={handleThreadIdChange}
-    extensions={[
-      chatbot.inquiryEnabled && count > chatbot.inquiryDisplayLinkAfterXMessage && <SupportInquiry key="inquiry" chatbot={chatbot} threadId={threadId} />
-    ]}
-    />
+    <div className={`chatbot-page ${className || ''}`}> {/* Add chatbot-page class here */}
+      <OpenAssistantGPTChat 
+        chatbot={{
+          ...chatbot,
+          displayFooterText: chatbot.displayBranding,
+          footerLink: 'https://getlinkai.com',
+          footerTextName: 'Link AI',
+          chatbotLogoURL: chatbot.chatbotLogoURL || '',
+        }} 
+        path={`/api/chatbots/${chatbot.id}/chat`} 
+        withExitX={withExitX} 
+        clientSidePrompt={clientSidePrompt} 
+        defaultMessage={defaultMessage} 
+        {...props} 
+        onMessagesChange={handleMessagesChange}
+        onThreadIdChange={handleThreadIdChange}
+        extensions={[
+          chatbot.inquiryEnabled && count > chatbot.inquiryDisplayLinkAfterXMessage && <SupportInquiry key="inquiry" chatbot={chatbot} threadId={threadId} />
+        ]}
+        style={{ backgroundColor: chatbot.chatBackgroundColor }} // Apply background color
+      />
+    </div>
   )
 }

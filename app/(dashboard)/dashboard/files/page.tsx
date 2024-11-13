@@ -62,9 +62,9 @@ export default async function FilePage() {
                     <FileUploadButton variant={"outline"} />
                 </div>
                 {uploadedFiles.length ?
-                    <div className="divide-y divide-border rounded-md border">
+                    <div className=" bg-custom"> 
                         {uploadedFiles.map((file) => (
-                            <FileItem key={file.id} file={file} />
+                            <FileItem key={file.id} file={file} /> //Added Custom BG
                         ))
                         }
                     </div>
