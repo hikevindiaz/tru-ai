@@ -1,6 +1,5 @@
 document.addEventListener("DOMContentLoaded", function () {
     (function () {
-      // Ensure the chatbotConfig object exists and has a chatbotId property
       if (!window.chatbotConfig || !window.chatbotConfig.chatbotId) {
         console.error("Chatbot configuration is missing. Please set window.chatbotConfig.chatbotId.");
         return;
@@ -11,14 +10,14 @@ document.addEventListener("DOMContentLoaded", function () {
       // Create and append the button iframe
       var buttonIframe = document.createElement('iframe');
       buttonIframe.src = "https://dashboard.getlinkai.com/embed/" + chatbotId + "/button?chatbox=false";
-      buttonIframe.style = "z-index: 50; position: fixed; right: 0; bottom: 0; width: 56px; height: 56px; border: 0; border-radius: 50%; background: #FFFFFF; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);";
+      buttonIframe.style = "z-index: 50; position: fixed; right: 1rem; bottom: 1rem; width: 56px; height: 56px; border: 0; border-radius: 50%; background: #FFFFFF; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);";
       buttonIframe.id = "openassistantgpt-chatbot-button-iframe";
       document.body.appendChild(buttonIframe);
   
       // Create and append the chat iframe
       var chatIframe = document.createElement('iframe');
       chatIframe.src = "https://dashboard.getlinkai.com/embed/" + chatbotId + "/window?chatbox=false&withExitX=true";
-      chatIframe.style = "z-index: 50; display: none; position: fixed; right: 0; bottom: 0; pointer-events: none; overflow: hidden; height: 65vh; border: 2px solid #e2e8f0; border-radius: 0.375rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); width: 30rem;";
+      chatIframe.style = "z-index: 100; display: none; position: fixed; right: 1rem; bottom: 1rem; pointer-events: none; overflow: hidden; height: 65vh; border: 2px solid #e2e8f0; border-radius: 0.375rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); width: 30rem;";
       chatIframe.allowFullscreen = true;
       chatIframe.id = "openassistantgpt-chatbot-iframe";
       document.body.appendChild(chatIframe);
@@ -54,8 +53,8 @@ document.addEventListener("DOMContentLoaded", function () {
               e.style.position = "fixed";
               e.style.width = "30rem";
               e.style.height = "65vh";
-              e.style.bottom = "0";
-              e.style.right = "0";
+              e.style.bottom = "1rem";
+              e.style.right = "1rem";
               e.style.top = "";
               e.style.left = "";
             }
