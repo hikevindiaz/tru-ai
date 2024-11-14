@@ -42,6 +42,7 @@ document.addEventListener("DOMContentLoaded", function () {
             s.contentWindow.postMessage("openChat", "*");
             e.style.pointerEvents = "auto";
             e.style.display = "block";
+            s.style.display = "none"; // Hide the button when chat is open
             if (window.innerWidth < 640) {
               e.style.position = "fixed";
               e.style.width = "100%";
@@ -66,6 +67,7 @@ document.addEventListener("DOMContentLoaded", function () {
           e.style.pointerEvents = "none";
           e.contentWindow.postMessage("closeChat", "*");
           s.contentWindow.postMessage("closeChat", "*");
+          s.style.display = "block"; // Show the button when chat is closed
         }
       });
     })();
