@@ -41,8 +41,8 @@
     --secondary: 210 100% 40%;
     --secondary-foreground: 0 0% 100%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 210 100% 50%;
+    --accent-foreground: 255 255 255;
 
     --destructive: 0 100% 50%;
     --destructive-foreground: 210 40% 98%;
@@ -97,24 +97,19 @@
   .chatbot-page {
     background-color: #ffffff !important; /* White background for chatbot page */
     color: #000000; /* Ensure text is visible */
+    min-height: 100vh; /* Ensure it covers the full viewport */
+    display: flex;
+    flex-direction: column;
   }
 
-  .chatbot-page .bg-background {
-    background-color: #ffffff !important; /* Ensure white background */
-  }
-
-  .chatbot-page .mx-auto {
-    background-color: #ffffff !important; /* Ensure white background */
-  }
-
-  .chatbot-page .fixed.inset-x-0.bottom-0 {
-    background-color: #ffffff !important; /* Ensure white background */
-  }
-
+  .chatbot-page .bg-background,
+  .chatbot-page .mx-auto,
+  .chatbot-page .fixed.inset-x-0.bottom-0,
   .chatbot-page .card {
-    background-color: #ffffff !important; /* Ensure white background for cards in chatbot */
+    background-color: #ffffff !important; /* Ensure white background */
     color: #000000; /* Ensure text is visible */
   }
+
   .toggle-button {
     background-color: hsl(var(--primary)) !important;
     color: hsl(var(--primary-foreground)) !important;
@@ -144,5 +139,6 @@
   .bg-custom {
   background-color: #3B82F6; /* Tailwind's bg-blue-500 */
 }
+
   
 }
