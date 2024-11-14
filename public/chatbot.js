@@ -17,7 +17,7 @@ document.addEventListener("DOMContentLoaded", function () {
       // Create and append the chat iframe
       var chatIframe = document.createElement('iframe');
       chatIframe.src = "https://dashboard.getlinkai.com/embed/" + chatbotId + "/window?chatbox=false&withExitX=true";
-      chatIframe.style = "z-index: 100; display: none; position: fixed; right: 1rem; bottom: 1rem; pointer-events: none; overflow: hidden; height: 65vh; border: 2px solid #e2e8f0; border-radius: 0.375rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); width: 30rem;";
+      chatIframe.style = "z-index: 101; display: none; position: fixed; right: 1rem; bottom: 1rem; pointer-events: none; overflow: hidden; height: 65vh; border: 2px solid #e2e8f0; border-radius: 0.375rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); width: 30rem;";
       chatIframe.allowFullscreen = true;
       chatIframe.id = "openassistantgpt-chatbot-iframe";
       document.body.appendChild(chatIframe);
@@ -42,7 +42,6 @@ document.addEventListener("DOMContentLoaded", function () {
             s.contentWindow.postMessage("openChat", "*");
             e.style.pointerEvents = "auto";
             e.style.display = "block";
-            s.style.display = "none"; // Hide the button when chat is open
             if (window.innerWidth < 640) {
               e.style.position = "fixed";
               e.style.width = "100%";
@@ -67,7 +66,6 @@ document.addEventListener("DOMContentLoaded", function () {
           e.style.pointerEvents = "none";
           e.contentWindow.postMessage("closeChat", "*");
           s.contentWindow.postMessage("closeChat", "*");
-          s.style.display = "block"; // Show the button when chat is closed
         }
       });
     })();
