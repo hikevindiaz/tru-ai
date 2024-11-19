@@ -1,5 +1,3 @@
-"use client"
-
 import { Button } from './ui/button';
 import {
     Dialog,
@@ -17,7 +15,6 @@ import { useState } from 'react';
 import { toast } from './ui/use-toast';
 import { Icons } from './icons';
 import { ClientSideChatbotProps } from './chat-sdk';
-
 
 export function SupportInquiry({chatbot,  threadId}: {chatbot: ClientSideChatbotProps, threadId?: string}) {
     const [open, setOpen] = useState(false);
@@ -94,23 +91,23 @@ export function SupportInquiry({chatbot,  threadId}: {chatbot: ClientSideChatbot
                 <DialogContent className="sm:max-w-[425px]">
                     <form onSubmit={handleInquirySubmit}>
                         <DialogHeader>
-                            <DialogTitle>{chatbot.inquiryTitle}</DialogTitle>
-                            <DialogDescription>
+                            <DialogTitle className="text-black">{chatbot.inquiryTitle}</DialogTitle>
+                            <DialogDescription className="text-black">
                                 {chatbot.inquirySubtitle}
                             </DialogDescription>
                         </DialogHeader>
                         <div className="grid gap-4 py-4 w-full">
                             <div className="gap-4">
-                                <Label htmlFor="name" className="text-right">
+                                <Label htmlFor="name" className="text-right text-black">
                                     {chatbot.inquiryEmailLabel}
                                 </Label>
-                                <Input onChange={(e) => setUserEmail(e.target.value)} className="bg-white" id="email" pattern=".+@.+\..+" type="email" />
+                                <Input onChange={(e) => setUserEmail(e.target.value)} className="bg-white text-black" id="email" pattern=".+@.+\..+" type="email" />
                             </div>
                             <div className="gap-4">
-                                <Label htmlFor="username" className="text-right">
+                                <Label htmlFor="username" className="text-right text-black">
                                     {chatbot.inquiryMessageLabel}
                                 </Label>
-                                <Textarea onChange={(e) => setUserMessage(e.target.value)} className="min-h-[100px]" id="message" />
+                                <Textarea onChange={(e) => setUserMessage(e.target.value)} className="min-h-[100px] text-black" id="message" />
                             </div>
                         </div>
                         <DialogFooter>

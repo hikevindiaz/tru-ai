@@ -97,19 +97,24 @@
   .chatbot-page {
     background-color: #ffffff !important; /* White background for chatbot page */
     color: #000000; /* Ensure text is visible */
-    min-height: 100vh; /* Ensure it covers the full viewport */
-    display: flex;
-    flex-direction: column;
   }
 
-  .chatbot-page .bg-background,
-  .chatbot-page .mx-auto,
-  .chatbot-page .fixed.inset-x-0.bottom-0,
-  .chatbot-page .card {
+  .chatbot-page .bg-background {
     background-color: #ffffff !important; /* Ensure white background */
+  }
+
+  .chatbot-page .mx-auto {
+    background-color: #ffffff !important; /* Ensure white background */
+  }
+
+  .chatbot-page .fixed.inset-x-0.bottom-0 {
+    background-color: #ffffff !important; /* Ensure white background */
+  }
+
+  .chatbot-page .card {
+    background-color: #ffffff !important; /* Ensure white background for cards in chatbot */
     color: #000000; /* Ensure text is visible */
   }
-
   .toggle-button {
     background-color: hsl(var(--primary)) !important;
     color: hsl(var(--primary-foreground)) !important;

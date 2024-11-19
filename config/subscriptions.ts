@@ -5,11 +5,11 @@ export const freePlan: SubscriptionPlan = {
     description: "The FREE plan is limited to 1 chatbot, 1 crawler, 3 files and 500 messages per month.",
     stripePriceId: "",
 
-    maxChatbots: 1,
-    maxCrawlers: 1,
-    maxFiles: 3,
+    maxChatbots: 10,
+    maxCrawlers: 10,
+    maxFiles: 30,
     unlimitedMessages: false,
-    maxMessagesPerMonth: 500,
+    maxMessagesPerMonth: 5000,
     basicCustomization: true,
     userInquiries: true,
 
