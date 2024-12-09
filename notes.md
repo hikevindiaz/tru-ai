@@ -44,7 +44,7 @@ How to implement chatbot on your website:
 </head>
 <script>
   window.chatbotConfig = {
-    chatbotId: 'clpl60296000qhoqiqwkmn0y5',
+    chatbotId: 'cm3g1y5sr0001ctepual1zhpv',
   }
 </script>
 
@@ -71,7 +71,7 @@ export default function Home() {
   useEffect(() => {
     // Set your global variable here
     window.chatbotConfig = {
-      chatbotId: "clpl60296000qhoqiqwkmn0y5"
+      chatbotId: "cm3g1y5sr0001ctepual1zhpv"
     };
 
   }, []);

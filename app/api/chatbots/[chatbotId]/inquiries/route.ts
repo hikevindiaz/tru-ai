@@ -16,6 +16,23 @@ export async function OPTIONS(req: Request) {
     return new Response('Ok', { status: 200 })
 }
 
+export async function GET(req: Request, context: z.infer<typeof routeContextSchema>) {
+    try {
+        const { params } = routeContextSchema.parse(context);
+        console.log(`Fetching inquiries for chatbotId: ${params.chatbotId}`);
+
+        const inquiries = await db.clientInquiries.findMany({
+            where: { chatbotId: params.chatbotId },
+            orderBy: { createdAt: 'desc' },
+        });
+
+        return new Response(JSON.stringify(inquiries), { status: 200 });
+    } catch (error) {
+        console.error('Error fetching inquiries:', error);
+        return new Response(null, { status: 500 });
+    }
+}
+
 export async function POST(
     req: Request,
     context: z.infer<typeof routeContextSchema>

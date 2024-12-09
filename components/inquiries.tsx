@@ -30,6 +30,10 @@ export function Inquiries({
 }: InquiryProps) {
     const [selectedInquiry] = useInquiry()
 
+    const selectedInquiryData = selectedInquiry.selected
+        ? inquiries.find((i) => i.id === selectedInquiry.selected)
+        : undefined;
+
     return (
         <TooltipProvider delayDuration={0}>
             <ResizablePanelGroup
@@ -71,9 +75,7 @@ export function Inquiries({
                 </ResizablePanel>
                 <ResizableHandle withHandle />
                 <ResizablePanel defaultSize={defaultLayout[2]}>
-                    <InquiryDisplay
-                        inquiry={selectedInquiry.selected ? inquiries.find((i) => i.id === selectedInquiry.selected) : undefined}
-                    />
+                    <InquiryDisplay inquiry={selectedInquiryData} />
                 </ResizablePanel>
             </ResizablePanelGroup>
         </TooltipProvider>

@@ -79,7 +79,7 @@ export function SupportInquiry({chatbot,  threadId}: {chatbot: ClientSideChatbot
                 }}
                 className="bg-zinc-100 shadow hover:bg-zinc-200 border rounded absolute top-0 right-0 -mt-1 -mr-1"
             >
-                <Icons.close className="h-4 w-4" />
+                <Icons.close className="h-4 w-4 text-black" />
             </button>
 
             <Dialog open={open} onOpenChange={setOpen}>

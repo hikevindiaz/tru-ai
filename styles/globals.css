@@ -35,8 +35,8 @@
     --card: linear-gradient(159deg, #020515 14.25%, #0F123B 86.75%); /* Solid color for cards */
     --card-foreground: 255 255 255; /* White text for cards */
 
-    --primary: 210 100% 50%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 210 50% 20%;
+    --primary-foreground: 210 50% 20%;
 
     --secondary: 210 100% 40%;
     --secondary-foreground: 0 0% 100%;

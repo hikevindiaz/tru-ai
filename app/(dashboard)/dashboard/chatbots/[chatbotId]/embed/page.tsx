@@ -89,7 +89,7 @@ export default async function EmbedOnSitePage({ params }: ChatbotSettingsProps) 
     window.chatbotConfig = { chatbotId: '${params.chatbotId}' };
     (function() {
         var script = document.createElement('script');
-        script.src = 'https://dashboard.getlinkai.com/chatbot.js';
+        script.src = '${siteConfig.url}/path/to/chatbot.js';
         document.head.appendChild(script);
     })();
 </script>

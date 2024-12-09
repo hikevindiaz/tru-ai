@@ -1,5 +1,3 @@
-import { DashboardConfig } from "@/types"
-
 export const dashboardConfig: DashboardConfig = {
     sidebarNav: [
         {
@@ -10,7 +8,27 @@ export const dashboardConfig: DashboardConfig = {
         {
             title: "LinkReps",
             href: "/dashboard/chatbots",
-            icon: "bot",
+            icon: "message",
+        },
+        {
+            title: "Interactions",
+            href: "/dashboard/interactions",
+            icon: "messagesSquare",
+        },
+        {
+            title: "Leads",
+            href: "/dashboard/leads",
+            icon: "user",
+        },
+        {
+            title: "Orders",
+            href: "/dashboard/orders",
+            icon: "coin",
+        },
+        {
+            title: "Calendar",
+            href: "/dashboard/calendar",
+            icon: "calendar",
         },
         {
             title: "Crawlers",
@@ -42,8 +60,5 @@ export const dashboardConfig: DashboardConfig = {
             href: "/dashboard/support",
             icon: "send",
         },
-       
-            
-        
     ],
 }
