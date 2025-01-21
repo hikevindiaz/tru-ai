@@ -3,12 +3,16 @@ import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import GithubProvider from "next-auth/providers/github";
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { Magic } from '@magic-sdk/admin';
+let Magic: any;
+let magicAdmin: any;
+
+if (typeof window === 'undefined') {
+  Magic = require('@magic-sdk/admin').Magic;
+  magicAdmin = new Magic(process.env.MAGIC_SECRET_KEY);
+}
 
 import { db } from "@/lib/db";
 import { sendWelcomeEmail } from "./emails/send-welcome";
-
-const magicAdmin = new Magic(process.env.MAGIC_SECRET_KEY);
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(db as any),

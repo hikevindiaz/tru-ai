@@ -8,7 +8,7 @@ export interface ChatComponentProps {
 
 export default async function Button({ params }: ChatComponentProps) {
   /*
-    <iframe src="http://localhost:3000/embed/clq5598dc000hrrwh5zvt6s1m/window"
+    <iframe src="http://localhost:3000/embed/cm3g1y5sr0001ctepual1zhpv/window"
   style="overflow: hidden; height: 80vh; border: 0 none; width: 480px; bottom: -30px;" allowfullscreen
   ></iframe>
    */

@@ -45,12 +45,25 @@ import {
   Lock,
   Calendar,
   Phone,
-} from "lucide-react"
+  Mail,
+  Speech,
+  Brain,
+  Eye,
+  Codepen,
+  Facebook,
+  Instagram,
+  Clock,
+  Circle,
+} from "lucide-react";
 
-export type Icon = LucideIcon
+// Import the custom Google icon from Material UI
+import GoogleIcon from "@mui/icons-material/Google";
+
+export type Icon = LucideIcon;
 
 export const Icons = {
-  lock: Lock, 
+  // Lucide Icons
+  lock: Lock,
   document: File,
   paperclip: Paperclip,
   reload: RefreshCcw,
@@ -93,4 +106,15 @@ export const Icons = {
   messagesSquare: MessagesSquare,
   calendar: Calendar,
   phone: Phone,
-}
+  mail: Mail,
+  speech: Speech,
+  brain: Brain,
+  eye: Eye,
+  codepen: Codepen,
+  facebook: Facebook,
+  instagram: Instagram,
+  clock: Clock,
+  circle: Circle,
+  // Custom Imported Icons
+  google: GoogleIcon, // Custom Google icon added here
+};

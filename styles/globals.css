@@ -1,165 +1,135 @@
+/* 1. Tailwind Base Styles - MUST BE FIRST */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Chrome, Edge, and Safari */
-*::-webkit-scrollbar {
-  width: 20px;
+
+/* 3. Global Reset */
+html, body, #__next {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
 }
 
-::-webkit-scrollbar-track {
-  background-color: white;
+/* 4. Page Content Padding */
+.page-content {
+  padding: 2rem;
 }
 
-::-webkit-scrollbar-thumb {
-  background-color: #106685;
-  border-radius: 20px;
-  border: 6px solid transparent;
-  background-clip: content-box;
-}
-
-@layer base {
-  :root {
-    --background: linear-gradient(159deg, #020515 14.25%, #0F123B 86.75%);
-    --foreground: 255 255 255; /* White text */
-
-    --muted: 210 50% 20%;
-    --muted-foreground: black;
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 47.4% 11.2%;
-
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-
-    --card: linear-gradient(159deg, #020515 14.25%, #0F123B 86.75%); /* Solid color for cards */
-    --card-foreground: 255 255 255; /* White text for cards */
-
-    --primary: 210 50% 20%;
-    --primary-foreground: 210 50% 20%;
-
-    --secondary: 210 100% 40%;
-    --secondary-foreground: 0 0% 100%;
-
-    --accent: 210 100% 50%;
-    --accent-foreground: 255 255 255;
-
-    --destructive: 0 100% 50%;
-    --destructive-foreground: 210 40% 98%;
-
-    --ring: 215 20.2% 65.1%;
-
-    --radius: 0.5rem;
+@media (min-width: 768px) {
+  .page-content {
+    padding: 3rem;
   }
 }
 
-@layer base {
-  * {
-    @apply border-border;
-  }
-
-  body {
-    @apply bg-background text-foreground;
-    background: var(--background);
-    backdrop-filter: blur(10px);
-    font-feature-settings: "rlig" 1, "calt" 1;
-    margin: 0;
-    padding: 0;
-    width: 100%;
-    height: 100%;
-    overflow-x: hidden;
-  }
-
-  .card {
-    background-color: var(--card) !important; /* Ensure solid background */
-    color: var(--card-foreground);
-    border-radius: 20px;
-  }
-
-  .button {
-    background-color: #0075FF; /* Blue background */
-    color: white; /* White text */
-    padding: 0.5rem 1rem; /* Example padding */
-    border-radius: 0.25rem; /* Example border radius */
-    transition: background-color 0.3s; /* Example transition */
-  }
-
-  .button:hover {
-    background-color: #184090; /* Darker blue on hover */
-  }
-
-  .chatbot-container {
-    background-color: #ffffff !important; /* Ensure white background */
-    color: #000000; /* Ensure text is visible */
-  }
-
-  /* Chatbot-specific styles */
-  .chatbot-page {
-    background-color: #ffffff !important; /* White background for chatbot page */
-    color: #000000; /* Ensure text is visible */
-  }
-
-  .chatbot-page .bg-background {
-    background-color: #ffffff !important; /* Ensure white background */
-  }
-
-  .chatbot-page .mx-auto {
-    background-color: #ffffff !important; /* Ensure white background */
-  }
-
-  .chatbot-page .fixed.inset-x-0.bottom-0 {
-    background-color: #ffffff !important; /* Ensure white background */
-  }
-
-  .chatbot-page .card {
-    background-color: #ffffff !important; /* Ensure white background for cards in chatbot */
-    color: #000000; /* Ensure text is visible */
-  }
-  .toggle-button {
-    background-color: hsl(var(--primary)) !important;
-    color: hsl(var(--primary-foreground)) !important;
-    border-radius: var(--radius);
-    transition: background-color 0.3s, color 0.3s;
-  }
-  
-  .toggle-button:hover {
-    background-color: hsl(var(--secondary)) !important;
-  }
-
-  .switch {
-    background-color: #0075FF !important; /* Bright blue background */
-    color: #FFFFFF !important; /* White text */
-    border-radius: var(--radius);
-    transition: background-color 0.3s, color 0.3s;
-  }
-  
-  .switch:checked {
-    background-color: #00C853 !important; /* Green when checked */
-  }
-  
-  .billing-card {
-    background-color: #0075FF !important; /* Bright blue background */
-  }
-
-  .bg-custom {
-  background-color: #3B82F6; /* Tailwind's bg-blue-500 */
+/* Light Theme Adjustments */
+.sidebar-light {
+  @apply bg-gray-50 text-gray-900;
 }
 
-/* Chatbot-specific styles */
-.chatbot-page {
-  background-color: #ffffff !important; /* White background for chatbot page */
-  color: #000000; /* Ensure text is visible */
-  min-height: 100vh; /* Ensure it covers the full viewport */
-  display: flex;
-  flex-direction: column;
+.sidebar-light .sidebar-header {
+  @apply text-gray-900;
 }
 
-.chatbot-page .bg-background,
-.chatbot-page .mx-auto,
-.chatbot-page .fixed.inset-x-0.bottom-0,
-.chatbot-page .card {
-  background-color: #ffffff !important; /* Ensure white background */
-  color: #000000; /* Ensure text is visible */
+.sidebar-light .sidebar-link {
+  @apply text-gray-700 hover:bg-gray-200 hover:text-gray-900;
 }
-  
+
+.sidebar-light .sidebar-divider {
+  @apply border-gray-200;
 }
+
+/* Dark Theme Adjustments */
+.sidebar-dark {
+  @apply bg-gray-900 text-gray-100;
+}
+
+.sidebar-dark .sidebar-header {
+  @apply text-gray-100;
+}
+
+.sidebar-dark .sidebar-link {
+  @apply text-gray-400 hover:bg-gray-800 hover:text-white;
+}
+
+.sidebar-dark .sidebar-divider {
+  @apply border-gray-800;
+}
+
+/* Sidebar Hover Effects */
+.sidebar-link {
+  @apply flex items-center gap-2 px-3 py-2 rounded-md transition-all duration-200;
+}
+
+/* Active Link State */
+.sidebar-link-active {
+  @apply bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300;
+}
+
+/* Divider Styling */
+.sidebar-divider {
+  @apply my-2 border-t;
+}
+
+/* Profile Dropdown */
+.profile-dropdown {
+  @apply bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100;
+}
+
+.profile-dropdown:hover {
+  @apply bg-gray-100 dark:bg-gray-700;
+}
+
+.toggle-button {
+  background-color: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  padding: 0.3rem;
+  border-radius: 50%;
+  transition: transform 0.3s ease;
+}
+
+.toggle-button:hover {
+  transform: scale(1.1);
+  background-color: hsl(var(--secondary));
+}
+
+/* 🔥 Pin/Unpin Button Styles */
+.toggle-button {
+  background-color: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  padding: 0.3rem;
+  border-radius: 50%;
+  transition: transform 0.3s ease;
+}
+
+.toggle-button:hover {
+  transform: scale(1.1);
+  background-color: hsl(var(--secondary));
+}
+
+/* Search Results Dropdown */
+.search-results {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.search-results button {
+  transition: background-color 0.2s ease;
+}
+
+/* Tremor Card Customization */
+.tremor-card {
+  @apply bg-white dark:bg-gray-900 shadow-md rounded-lg p-4;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.tremor-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+

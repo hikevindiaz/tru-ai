@@ -12,6 +12,8 @@ import { AOSInit } from '@/components/aos-init';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { constructMetadata } from '@/lib/construct-metadata';
 
+import { SessionWrapper } from "@/components/providers/SessionWrapper";  // ✅ Import the wrapper
+
 const fontSans = FontSans({
   subsets: ["latin"],
   variable: "--font-sans",
@@ -24,7 +26,7 @@ const fontHeading = localFont({
 
 export const metadata = constructMetadata();
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -40,13 +42,17 @@ export default async function RootLayout({
           fontHeading.variable
         )}
       >
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <TooltipProvider>
-            {children}
-            <Toaster />
-            {process.env.VERCEL_ENV === "production" ? <Analytics /> : null}
-          </TooltipProvider>
-        </ThemeProvider>
+        {/* ✅ Wrap with SessionWrapper */}
+        <SessionWrapper>
+          <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+            <TooltipProvider>
+              {children}
+              <Toaster />
+              {process.env.VERCEL_ENV === "production" ? <Analytics /> : null}
+            </TooltipProvider>
+          </ThemeProvider>
+        </SessionWrapper>
+
         <Chatbot />
       </body>
       <GoogleAnalytics gaId={process.env.GOOGLE_ANALYTICS_ID || ''} />

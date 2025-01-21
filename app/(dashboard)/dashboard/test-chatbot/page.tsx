@@ -1,0 +1,364 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useSession } from "next-auth/react";
+import { Card } from "@/components/ui/homepage/card";
+import { Button } from "@/components/Button";
+import { Plus } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { Divider } from "@/components/Divider";
+import { EmptyState } from "@/components/agents/empty-state";
+import { CreateAgentDrawer } from "@/components/agents/create-agent-drawer";
+import { toast } from "sonner";
+import { RiMoreFill } from "@remixicon/react";
+import { LinkAIAgentIcon } from "@/components/icons/LinkAIAgentIcon";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/DropdownMenu";
+import { RiMessage2Line, RiUserLine, RiErrorWarningLine, RiDeleteBinLine } from "@remixicon/react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogClose,
+} from "@/components/ui/dialog";
+import { AgentSettings } from "@/components/agents/agent-settings";
+
+interface Agent {
+  id: string;
+  name: string;
+  status: 'draft' | 'live';
+  userId: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const colorCombinations = [
+  { text: 'text-fuchsia-800 dark:text-fuchsia-500', bg: 'bg-fuchsia-100 dark:bg-fuchsia-500/20' },
+  { text: 'text-blue-800 dark:text-blue-500', bg: 'bg-blue-100 dark:bg-blue-500/20' },
+  { text: 'text-pink-800 dark:text-pink-500', bg: 'bg-pink-100 dark:bg-pink-500/20' },
+  { text: 'text-emerald-800 dark:text-emerald-500', bg: 'bg-emerald-100 dark:bg-emerald-500/20' },
+  { text: 'text-orange-800 dark:text-orange-500', bg: 'bg-orange-100 dark:bg-orange-500/20' },
+  { text: 'text-indigo-800 dark:text-indigo-500', bg: 'bg-indigo-100 dark:bg-indigo-500/20' },
+  { text: 'text-yellow-800 dark:text-yellow-500', bg: 'bg-yellow-100 dark:bg-yellow-500/20' },
+];
+
+const getInitials = (name: string) => {
+  return name
+    .split(' ')
+    .map(word => word[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
+};
+
+export default function TestChatbotPage() {
+  const { data: session } = useSession();
+  const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
+  const [agents, setAgents] = useState<Agent[]>([]);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [agentToDelete, setAgentToDelete] = useState<Agent | null>(null);
+
+  useEffect(() => {
+    const fetchAgents = async () => {
+      if (!session?.user?.id) return;
+      
+      try {
+        const response = await fetch('/api/chatbots');
+        if (!response.ok) throw new Error('Failed to fetch agents');
+        
+        const data = await response.json();
+        setAgents(data);
+      } catch (error) {
+        console.error('Error fetching agents:', error);
+        toast.error("Failed to load agents");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchAgents();
+  }, [session?.user?.id]);
+
+  const handleCreateAgent = async (name: string, templateId: string) => {
+    try {
+      const response = await fetch('/api/chatbots', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name,
+          templateId,
+        }),
+      });
+
+      if (!response.ok) throw new Error('Failed to create agent');
+
+      const newAgent = await response.json();
+      setAgents(prev => [...prev, newAgent]);
+      toast.success("Agent created successfully");
+      setIsDrawerOpen(false);
+    } catch (error) {
+      console.error('Error creating agent:', error);
+      toast.error("Failed to create agent");
+    }
+  };
+
+  const handleDeleteAgent = async (agentId: string) => {
+    try {
+      const response = await fetch(`/api/chatbots/${agentId}`, {
+        method: 'DELETE',
+      });
+      
+      if (!response.ok) throw new Error('Failed to delete agent');
+      
+      setAgents(prev => prev.filter(agent => agent.id !== agentId));
+      toast.success("Agent deleted successfully");
+      setAgentToDelete(null);
+    } catch (error) {
+      console.error('Error deleting agent:', error);
+      toast.error("Failed to delete agent");
+    }
+  };
+
+  const DeleteConfirmationDialog = () => (
+    <Dialog open={!!agentToDelete} onOpenChange={() => setAgentToDelete(null)}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Delete Agent</DialogTitle>
+          <DialogDescription className="mt-1 text-sm leading-6 text-gray-600 dark:text-gray-400">
+            Are you sure you want to delete this agent? This action cannot be undone.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter className="mt-6">
+          <DialogClose asChild>
+            <Button
+              variant="secondary"
+              className="mt-2 w-full sm:mt-0 sm:w-fit"
+              onClick={() => setAgentToDelete(null)}
+            >
+              Cancel
+            </Button>
+          </DialogClose>
+          <Button 
+            variant="destructive"
+            className="w-full sm:w-fit"
+            onClick={() => agentToDelete && handleDeleteAgent(agentToDelete.id)}
+          >
+            Delete Agent
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+
+  return (
+    <div className="flex h-full">
+      {/* Left Sidebar */}
+      <div className="w-80 border-r border-gray-200 dark:border-gray-800 flex flex-col">
+        <div className="p-4 pb-0">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-50">
+              My Agents
+            </h2>
+            <Button
+              variant="secondary"
+              size="sm"
+              className="h-8 w-8 p-0"
+              onClick={() => setIsDrawerOpen(true)}
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+        
+        <Divider className="mt-4" />
+        
+        <div className="px-4 pb-4 flex-1">
+          {isLoading ? (
+            <div className="flex h-full items-center justify-center">
+              <div className="text-sm text-gray-500">Loading agents...</div>
+            </div>
+          ) : agents.length > 0 ? (
+            <div className="grid grid-cols-1 gap-3 mt-1">
+              {agents.map((agent, index) => (
+                <Card 
+                  key={agent.id} 
+                  asChild 
+                  className={cn(
+                    "group transition-all duration-200",
+                    "hover:bg-gray-50 dark:hover:bg-gray-900",
+                    "hover:shadow-sm",
+                    "hover:border-gray-300 dark:hover:border-gray-700",
+                    selectedAgent?.id === agent.id && [
+                      "border-blue-500 dark:border-blue-500",
+                      "bg-blue-50/50 dark:bg-blue-500/5",
+                      "ring-1 ring-blue-500/20 dark:ring-blue-500/20"
+                    ]
+                  )}
+                >
+                  <div className="relative px-3.5 py-2.5">
+                    <div className="flex items-center space-x-3">
+                      <span
+                        className={cn(
+                          colorCombinations[index % colorCombinations.length].bg,
+                          colorCombinations[index % colorCombinations.length].text,
+                          'flex size-10 shrink-0 items-center justify-center rounded-full text-sm font-medium',
+                          'transition-transform duration-200 group-hover:scale-[1.02]',
+                          selectedAgent?.id === agent.id && [
+                            "border-2 border-blue-500 dark:border-blue-500",
+                            "shadow-[0_0_0_4px_rgba(59,130,246,0.1)]"
+                          ]
+                        )}
+                        aria-hidden={true}
+                      >
+                        {getInitials(agent.name)}
+                      </span>
+                      <div className="truncate min-w-0">
+                        <p className={cn(
+                          "truncate text-sm font-medium text-gray-900 dark:text-gray-50",
+                          selectedAgent?.id === agent.id && "text-blue-600 dark:text-blue-400"
+                        )}>
+                          <button 
+                            onClick={() => setSelectedAgent(agent)}
+                            className="focus:outline-none hover:no-underline no-underline"
+                            type="button"
+                          >
+                            <span className="absolute inset-0" aria-hidden="true" />
+                            {agent.name}
+                          </button>
+                        </p>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <p className="text-xs text-gray-500 dark:text-gray-500 pointer-events-none no-underline">
+                            ID: {agent.id.slice(0, 12)}
+                          </p>
+                          <Badge
+                            variant={agent.status === 'live' ? 'default' : 'secondary'}
+                            className={cn(
+                              "text-xs py-0 px-1.5",
+                              selectedAgent?.id === agent.id && agent.status === 'draft' && 
+                              "bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400"
+                            )}
+                          >
+                            {agent.status}
+                          </Badge>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="absolute right-2.5 top-2.5">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 w-6 p-0"
+                          >
+                            <RiMoreFill className="h-3.5 w-3.5 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-56">
+                          <DropdownMenuLabel>Agent Actions</DropdownMenuLabel>
+                          <DropdownMenuSeparator />
+                          
+                          <DropdownMenuGroup>
+                            <DropdownMenuItem onClick={() => window.location.href = `/chat/${agent.id}`}>
+                              <RiMessage2Line className="mr-2 h-4 w-4" />
+                              Chat
+                            </DropdownMenuItem>
+                          </DropdownMenuGroup>
+
+                          <DropdownMenuSeparator />
+
+                          <DropdownMenuGroup>
+                            <DropdownMenuItem onClick={() => window.location.href = `/dashboard/inquiries/${agent.id}`}>
+                              <RiUserLine className="mr-2 h-4 w-4" />
+                              User Inquiries
+                            </DropdownMenuItem>
+
+                            <DropdownMenuItem onClick={() => window.location.href = `/dashboard/errors/${agent.id}`}>
+                              <RiErrorWarningLine className="mr-2 h-4 w-4" />
+                              Errors
+                            </DropdownMenuItem>
+                          </DropdownMenuGroup>
+
+                          <DropdownMenuSeparator />
+
+                          <DropdownMenuItem 
+                            onClick={() => setAgentToDelete(agent)}
+                            className="text-red-600 dark:text-red-400"
+                          >
+                            <RiDeleteBinLine className="mr-2 h-4 w-4" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="flex h-full items-center justify-center">
+              <Button 
+                variant="secondary"
+                onClick={() => setIsDrawerOpen(true)}
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Create New Agent
+              </Button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="flex-1 overflow-auto">
+        {selectedAgent ? (
+          <AgentSettings 
+            agent={selectedAgent}
+            onSave={async (data) => {
+              // Handle saving agent settings
+              try {
+                const response = await fetch(`/api/chatbots/${selectedAgent.id}`, {
+                  method: 'PATCH',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify(data),
+                });
+                
+                if (!response.ok) throw new Error('Failed to update agent');
+                
+                toast.success("Settings saved successfully");
+              } catch (error) {
+                console.error('Error updating agent:', error);
+                toast.error("Failed to save settings");
+              }
+            }}
+          />
+        ) : (
+          <EmptyState onCreateAgent={() => setIsDrawerOpen(true)} />
+        )}
+      </div>
+
+      <DeleteConfirmationDialog />
+      <CreateAgentDrawer 
+        open={isDrawerOpen}
+        onClose={() => setIsDrawerOpen(false)}
+        onCreateAgent={handleCreateAgent}
+      />
+    </div>
+  );
+} 
