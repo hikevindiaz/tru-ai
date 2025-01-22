@@ -84,3 +84,9 @@ export const isStreamStringEqualToType = (
 
 export type StreamString =
   `${(typeof StreamStringPrefixes)[keyof typeof StreamStringPrefixes]}:${string}\n`;
+
+export const focusRing = "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-950"
+
+export const focusInput = "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-0"
+
+export const hasErrorInput = "border-red-500 focus-visible:ring-red-500 dark:border-red-500"

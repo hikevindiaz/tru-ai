@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { toast } from "sonner"
 import { RiMoreFill, RiMessage2Line, RiUserLine, RiErrorWarningLine, RiDeleteBinLine, RiUser3Line, RiFileTextLine, RiTranslate2, RiRobot2Line, RiCodeLine } from "@remixicon/react"
 import { Card } from "@/components/ui/card"
@@ -8,7 +8,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Button } from "@/components/Button"
+import { Button } from "@/components/ui/button"
 import { Divider } from "@/components/Divider"
 import {
   Select,
@@ -128,6 +128,10 @@ export function AgentSettings({ agent, onSave }: AgentSettingsProps) {
   const handleDeleteClick = () => {
     // Implement delete functionality if needed
   };
+
+  useEffect(() => {
+    // ... existing code
+  }, [form, chatbot.id]); // Add missing dependencies
 
   return (
     <TooltipProvider>
