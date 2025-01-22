@@ -80,9 +80,8 @@ export function CustomerTicketsSettings({
       .then((res) => res.json())
       .then((data) => {
         form.setValue("enabled", data.inquiryEnabled)
-        // ... set other values
       })
-  }, [chatbotId])
+  }, [chatbotId, form.setValue])
 
   return (
     <Form {...form}>

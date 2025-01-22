@@ -98,3 +98,5 @@ const RadioCardIndicator = React.forwardRef<
 RadioCardIndicator.displayName = "RadioCardIndicator"
 
 export { RadioCardGroup, RadioCardIndicator, RadioCardItem }
+
+export { RadioGroup, RadioGroupItem } from "@radix-ui/react-radio-group"
