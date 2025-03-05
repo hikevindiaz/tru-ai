@@ -39,6 +39,11 @@ const nextConfig = {
         destination: '/login',
         permanent: true,
       },
+      {
+        source: '/guides',
+        destination: '/guides/index',
+        permanent: true,
+      },
     ];
   },
   sentry: {

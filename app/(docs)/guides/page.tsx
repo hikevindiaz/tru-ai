@@ -1,3 +1,7 @@
+// This file is causing a routing conflict with the [...slug] route
+// We'll move this content to the [...slug]/page.tsx file and handle the root guides route there
+// This file will be deleted after the changes are made to the other file
+
 import { Metadata } from "next"
 
 // Check if we're running on Vercel

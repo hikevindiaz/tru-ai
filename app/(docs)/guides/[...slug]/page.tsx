@@ -39,6 +39,14 @@ async function getGuideFromParams(params: any) {
 export async function generateMetadata({
     params,
 }: GuidePageProps): Promise<Metadata> {
+    // If this is the index page (the slug is "index")
+    if (params.slug.length === 1 && params.slug[0] === "index") {
+        return {
+            title: "Guides",
+            description: "Learn how to use our product with our comprehensive guides.",
+        }
+    }
+
     const guide = await getGuideFromParams(params)
 
     if (!guide) {
@@ -81,11 +89,19 @@ export async function generateMetadata({
 export async function generateStaticParams(): Promise<
     GuidePageProps["params"][]
 > {
-    if (isVercel) return [];
+    if (isVercel) return [{ slug: ["index"] }];
     
-    return allGuides.map((guide) => ({
-        slug: guide.slugAsParams.split("/"),
-    }))
+    // Include the root guides page as "index"
+    const paths = [{ slug: ["index"] }];
+    
+    // Add all the individual guide pages
+    allGuides.forEach((guide) => {
+        paths.push({
+            slug: guide.slugAsParams.split("/"),
+        });
+    });
+    
+    return paths;
 }
 
 export default async function GuidePage({ params }: GuidePageProps) {
@@ -104,7 +120,67 @@ export default async function GuidePage({ params }: GuidePageProps) {
         );
     }
 
-    // Original implementation for local development
+    // Check if this is the index page
+    if (params.slug.length === 1 && params.slug[0] === "index") {
+        // For the index page, render the guides index
+        const { PageHeader } = await import("@/components/page-header")
+        const Link = (await import("next/link")).default
+        const { cn } = await import("@/lib/utils")
+        const { buttonVariants } = await import("@/components/ui/button")
+        const { Icons } = await import("@/components/icons")
+
+        // Sort guides by date
+        const guides = allGuides
+            .filter((guide) => guide.published)
+            .sort((a, b) => {
+                return new Date(b.date).getTime() - new Date(a.date).getTime()
+            })
+
+        return (
+            <div className="container max-w-4xl py-6 lg:py-10">
+                <PageHeader
+                    heading="Guides"
+                    text="Learn how to use our product with our comprehensive guides."
+                />
+                <div className="grid gap-4 md:grid-cols-2 md:gap-6">
+                    {guides.map((guide) => (
+                        <article
+                            key={guide._id}
+                            className="group relative rounded-lg border p-6 shadow-md transition-shadow hover:shadow-lg"
+                        >
+                            {guide.featured && (
+                                <span className="absolute right-4 top-4 rounded-full px-3 py-1 text-xs font-medium">
+                                    Featured
+                                </span>
+                            )}
+                            <div className="flex flex-col justify-between space-y-4">
+                                <div className="space-y-2">
+                                    <h2 className="text-xl font-medium tracking-tight">
+                                        {guide.title}
+                                    </h2>
+                                    {guide.description && (
+                                        <p className="text-muted-foreground">{guide.description}</p>
+                                    )}
+                                </div>
+                                <Link
+                                    href={guide.slug}
+                                    className={cn(
+                                        buttonVariants({ variant: "ghost", size: "sm" }),
+                                        "h-8 w-full justify-start p-0"
+                                    )}
+                                >
+                                    <Icons.arrowRight className="mr-1 h-4 w-4" />
+                                    Read guide
+                                </Link>
+                            </div>
+                        </article>
+                    ))}
+                </div>
+            </div>
+        );
+    }
+
+    // For individual guide pages, render the guide content
     const guide = await getGuideFromParams(params)
 
     if (!guide) {

@@ -19,7 +19,7 @@ if (!isVercel) {
 
 interface DocPageProps {
     params: {
-        slug: string[]
+        slug?: string[]
     }
 }
 
@@ -39,6 +39,14 @@ async function getDocFromParams(params: any) {
 export async function generateMetadata({
     params,
 }: DocPageProps): Promise<Metadata> {
+    // If this is the index page
+    if (!params.slug || params.slug.length === 0) {
+        return {
+            title: "Documentation",
+            description: "Learn how to use our product with our comprehensive documentation.",
+        }
+    }
+
     const doc = await getDocFromParams(params)
 
     if (!doc) {
@@ -83,9 +91,17 @@ export async function generateStaticParams(): Promise<
 > {
     if (isVercel) return [];
     
-    return allDocs.map((doc) => ({
-        slug: doc.slugAsParams.split("/"),
-    }))
+    // Include the root docs page
+    const paths = [{ slug: [] }];
+    
+    // Add all the individual doc pages
+    allDocs.forEach((doc) => {
+        paths.push({
+            slug: doc.slugAsParams.split("/"),
+        });
+    });
+    
+    return paths;
 }
 
 export default async function DocPage({ params }: DocPageProps) {
@@ -104,7 +120,57 @@ export default async function DocPage({ params }: DocPageProps) {
         );
     }
 
-    // Original implementation for local development
+    // Check if this is the index page
+    if (!params.slug || params.slug.length === 0) {
+        // For the index page, render the docs index
+        const { DocsPageHeader } = await import("@/components/page-header")
+        const Link = (await import("next/link")).default
+
+        // Get unique doc categories
+        const categories = Array.from(
+            new Set(allDocs.map((doc) => doc.category))
+        ).sort();
+
+        return (
+            <div className="container max-w-4xl py-6 lg:py-10">
+                <DocsPageHeader 
+                    heading="Documentation" 
+                    text="Learn how to use our product with our comprehensive documentation." 
+                />
+                <div className="grid gap-8">
+                    {categories.map((category) => {
+                        const categoryDocs = allDocs
+                            .filter((doc) => doc.category === category)
+                            .sort((a, b) => a.title.localeCompare(b.title));
+
+                        return (
+                            <div key={category} className="space-y-4">
+                                <h2 className="text-2xl font-bold">{category}</h2>
+                                <div className="grid gap-4 md:grid-cols-2">
+                                    {categoryDocs.map((doc) => (
+                                        <Link
+                                            key={doc._id}
+                                            href={doc.slug}
+                                            className="group rounded-lg border p-4 hover:bg-muted"
+                                        >
+                                            <h3 className="font-medium">{doc.title}</h3>
+                                            {doc.description && (
+                                                <p className="text-sm text-muted-foreground">
+                                                    {doc.description}
+                                                </p>
+                                            )}
+                                        </Link>
+                                    ))}
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            </div>
+        );
+    }
+
+    // For individual doc pages, render the doc content
     const doc = await getDocFromParams(params)
 
     if (!doc) {
