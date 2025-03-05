@@ -81,7 +81,27 @@ export async function generateStaticParams(): Promise<
     }))
 }
 
-export default async function GuidePage({ params }: GuidePageProps) {
+// Check if we're running on Vercel
+const isVercel = process.env.VERCEL === '1';
+
+// If on Vercel, use a simplified version that doesn't depend on ContentLayer
+if (isVercel) {
+  export default function GuidesPage() {
+    return (
+      <div className="container mx-auto py-10">
+        <h1 className="text-3xl font-bold mb-4">Guides</h1>
+        <p>Our guides are currently being updated. Please check back soon.</p>
+        <p className="mt-4">
+          <a href="/dashboard" className="text-blue-500 hover:underline">
+            Return to Dashboard
+          </a>
+        </p>
+      </div>
+    );
+  }
+} else {
+  // Original implementation for local development
+  export default async function GuidePage({ params }: GuidePageProps) {
     const guide = await getGuideFromParams(params)
 
     if (!guide) {
@@ -113,4 +133,5 @@ export default async function GuidePage({ params }: GuidePageProps) {
             </div>
         </main>
     )
+  }
 }
