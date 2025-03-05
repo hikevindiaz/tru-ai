@@ -1,113 +1,278 @@
-"use client";
+'use client';
 
-import React from "react";
+import { useState } from 'react';
+import { useSession } from "next-auth/react";
+import { Button } from "@/components/Button";
+import { Badge } from "@/components/ui/badge";
+import { Divider } from "@/components/Divider";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter
+} from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { 
+  RiFilterLine, 
+  RiFileListLine, 
+  RiSettings3Line, 
+  RiCheckboxCircleLine, 
+  RiCloseCircleLine,
+  RiSettings4Line,
+  RiStore3Line,
+  RiTruckLine,
+  RiWalletLine,
+  RiNotification3Line,
+  RiShoppingBag3Line
+} from "@remixicon/react";
+import { cn } from "@/lib/utils";
 
-const orders = [
-  { id: "#FWB127364372", date: "20.12.2023", price: "$4,756", status: "Pre-order" },
-  { id: "#FWB125467980", date: "11.12.2023", price: "$499", status: "In transit" },
-  { id: "#FWB139485607", date: "08.12.2023", price: "$85", status: "Confirmed" },
-  { id: "#FWB137364371", date: "16.11.2023", price: "$119", status: "Cancelled" },
-];
+// Import components
+import { OrderList } from "@/components/orders/OrderList";
+import { OrderDetails } from "@/components/orders/OrderDetails";
+import { StoreHoursSettings } from "@/components/orders/StoreHoursSettings";
+import { DeliverySettings, DeliveryMethod } from "@/components/orders/DeliverySettings";
+import { PaymentSettings, PaymentMethod } from "@/components/orders/PaymentSettings";
+import { NotificationSettings } from "@/components/orders/NotificationSettings";
+import { 
+  Order, 
+  StatusConfig, 
+  StoreHours, 
+  mockOrders, 
+  statusConfig, 
+  defaultStoreHours,
+  defaultDeliveryMethods,
+  defaultPaymentMethods,
+  defaultNotificationSettings
+} from "@/lib/orders-data";
 
-const OrderStatusBadge = ({ status }: { status: string }) => {
-  const statusClasses = {
-    "Pre-order": "bg-primary-100 text-primary-800",
-    "In transit": "bg-yellow-100 text-yellow-800",
-    "Confirmed": "bg-green-100 text-green-800",
-    "Cancelled": "bg-red-100 text-red-800",
+export default function OrdersPage() {
+  const { data: session } = useSession();
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [storeHours, setStoreHours] = useState<StoreHours[]>(defaultStoreHours);
+  const [deliveryMethods, setDeliveryMethods] = useState<DeliveryMethod[]>(defaultDeliveryMethods);
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>(defaultPaymentMethods);
+  const [notificationSettings, setNotificationSettings] = useState(defaultNotificationSettings);
+  const [settingsTab, setSettingsTab] = useState("hours");
+  const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
+  
+  // Filter orders based on status filter
+  const filteredOrders = statusFilter === "all" 
+    ? mockOrders 
+    : mockOrders.filter((order: Order) => order.status === statusFilter);
+
+  // Count orders by status
+  const orderCounts = {
+    all: mockOrders.length,
+    new: mockOrders.filter((order: Order) => order.status === "new").length,
+    confirmed: mockOrders.filter((order: Order) => order.status === "confirmed").length,
+    preparing: mockOrders.filter((order: Order) => order.status === "preparing").length,
+    ready: mockOrders.filter((order: Order) => order.status === "ready").length,
+    completed: mockOrders.filter((order: Order) => order.status === "completed").length,
+    cancelled: mockOrders.filter((order: Order) => order.status === "cancelled").length,
+  };
+
+  // Handle store hours change
+  const handleStoreHoursChange = (index: number, field: string, value: string | boolean) => {
+    const updatedHours = [...storeHours];
+    updatedHours[index] = { ...updatedHours[index], [field]: value };
+    setStoreHours(updatedHours);
+  };
+
+  // Handle save settings
+  const handleSaveSettings = () => {
+    // Here you would typically save the settings to your backend
+    console.log('Saving settings:', {
+      storeHours,
+      deliveryMethods,
+      paymentMethods,
+      notificationSettings
+    });
+    
+    setSettingsDialogOpen(false);
   };
 
   return (
-    <span
-      className={`inline-flex items-center rounded px-2.5 py-0.5 text-xs font-medium ${
-        statusClasses[status]
-      }`}
-    >
-      {status}
-    </span>
-  );
-};
-
-const OrdersPage = () => {
-  return (
-    <section className="bg-background py-8 md:py-16">
-      <div className="container mx-auto px-4">
-        <h2 className="text-2xl font-bold text-foreground mb-8">My Orders</h2>
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-            <thead className="bg-gray-50 dark:bg-gray-800">
-              <tr>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+    <div className="flex h-full">
+      {/* Left Sidebar - Order List */}
+      <div className="w-80 border-r border-gray-200 dark:border-gray-800 flex flex-col">
+        <div className="p-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-50">
+              Orders
+            </h2>
+            
+            {/* Settings Dialog */}
+            <Dialog open={settingsDialogOpen} onOpenChange={setSettingsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button 
+                  variant="secondary"
+                  className="h-8 w-8 p-1 flex items-center justify-center"
                 >
-                  Order ID
-                </th>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
-                >
-                  Date
-                </th>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
-                >
-                  Price
-                </th>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
-                >
-                  Status
-                </th>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
-                >
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-              {orders.map((order) => (
-                <tr key={order.id}>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-foreground">
-                    {order.id}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                    {order.date}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                    {order.price}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <OrderStatusBadge status={order.status} />
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <button
-                      className="button mr-4"
-                      onClick={() => console.log(`Viewing details for ${order.id}`)}
+                  <RiSettings4Line className="h-4 w-4" />
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>Store Settings</DialogTitle>
+                  <DialogDescription>
+                    Configure your store settings and order workflow.
+                  </DialogDescription>
+                </DialogHeader>
+                
+                <Tabs value={settingsTab} onValueChange={setSettingsTab} className="mt-4">
+                  <TabsList className="grid grid-cols-4 mb-4">
+                    <TabsTrigger value="hours" className="flex items-center gap-2">
+                      <RiStore3Line className="h-4 w-4" />
+                      <span>Store Hours</span>
+                    </TabsTrigger>
+                    <TabsTrigger value="delivery" className="flex items-center gap-2">
+                      <RiTruckLine className="h-4 w-4" />
+                      <span>Delivery</span>
+                    </TabsTrigger>
+                    <TabsTrigger value="payment" className="flex items-center gap-2">
+                      <RiWalletLine className="h-4 w-4" />
+                      <span>Payment</span>
+                    </TabsTrigger>
+                    <TabsTrigger value="notifications" className="flex items-center gap-2">
+                      <RiNotification3Line className="h-4 w-4" />
+                      <span>Notifications</span>
+                    </TabsTrigger>
+                  </TabsList>
+                  
+                  <TabsContent value="hours" className="space-y-4">
+                    <StoreHoursSettings 
+                      storeHours={storeHours} 
+                      onStoreHoursChange={handleStoreHoursChange} 
+                    />
+                  </TabsContent>
+                  
+                  <TabsContent value="delivery">
+                    <DeliverySettings 
+                      deliveryMethods={deliveryMethods}
+                      onDeliveryMethodsChange={setDeliveryMethods}
+                    />
+                  </TabsContent>
+                  
+                  <TabsContent value="payment">
+                    <PaymentSettings 
+                      paymentMethods={paymentMethods}
+                      onPaymentMethodsChange={setPaymentMethods}
+                    />
+                  </TabsContent>
+                  
+                  <TabsContent value="notifications">
+                    <NotificationSettings 
+                      settings={notificationSettings}
+                      onSettingsChange={setNotificationSettings}
+                    />
+                  </TabsContent>
+                </Tabs>
+                
+                <DialogFooter className="mt-6 sticky bottom-0 bg-white dark:bg-gray-950 pt-4 pb-2">
+                  <Button 
+                    variant="secondary" 
+                    className="mr-2"
+                    onClick={() => setSettingsDialogOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button onClick={handleSaveSettings}>
+                    Save Changes
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+            View and manage your orders
+          </p>
+          
+          {/* Status Filter Select */}
+          <div className="mt-4">
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Filter by status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all" className="flex items-center">
+                  <div className="flex items-center gap-2">
+                    <RiFilterLine className="size-4 text-gray-500" />
+                    <span>All Orders</span>
+                    <Badge 
+                      variant="secondary"
+                      className="ml-auto text-xs"
                     >
-                      View
-                    </button>
-                    {order.status !== "Cancelled" && (
-                      <button
-                        className="button"
-                        onClick={() => console.log(`Reordering ${order.id}`)}
-                      >
-                        Reorder
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                      {orderCounts.all}
+                    </Badge>
+                  </div>
+                </SelectItem>
+                {Object.entries(statusConfig).filter(([key]) => key !== 'all').map(([status, config]) => {
+                  const StatusIcon = config.icon;
+                  return (
+                    <SelectItem key={status} value={status} className="flex items-center">
+                      <div className="flex items-center gap-2">
+                        <StatusIcon className={cn("size-4", config.color)} />
+                        <span>{config.label}</span>
+                        <Badge 
+                          variant={(statusConfig[status as keyof typeof statusConfig]?.variant || "default") as any}
+                          className="ml-auto text-xs"
+                        >
+                          {orderCounts[status as keyof typeof orderCounts] || 0}
+                        </Badge>
+                      </div>
+                    </SelectItem>
+                  );
+                })}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        
+        <Divider />
+        
+        <div className="flex-1 overflow-auto">
+          <OrderList 
+            orders={filteredOrders} 
+            selectedOrder={selectedOrder} 
+            onSelectOrder={setSelectedOrder} 
+          />
         </div>
       </div>
-    </section>
-  );
-};
 
-export default OrdersPage;
+      {/* Main Content - Order Details */}
+      <div className="flex-1 overflow-auto">
+        {selectedOrder ? (
+          <OrderDetails order={selectedOrder} />
+        ) : (
+          <div className="flex h-full flex-col items-center justify-center p-8 text-center">
+            <div className="flex max-w-md flex-col items-center">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900">
+                <RiShoppingBag3Line className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+              </div>
+              
+              <h2 className="mt-4 text-lg font-semibold text-gray-900 dark:text-gray-50">
+                Select an order to view details
+              </h2>
+              
+              <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                Choose an order from the sidebar to view its details and manage it.
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

@@ -58,3 +58,106 @@ Vercel – deployments
 ## Repo Activity
 
 ![OpenAssistantGPT repo activity](https://repobeats.axiom.co/api/embed/d376259a3651f5bcb458c4f00efb9012cb400813.svg "Repobeats analytics image")
+
+## Database Migrations
+
+If you need to apply database migrations, run:
+
+```bash
+chmod +x scripts/apply-migrations.sh
+./scripts/apply-migrations.sh
+```
+
+If you need to regenerate the Prisma client without creating a new migration:
+
+```bash
+chmod +x scripts/regenerate-client.sh
+./scripts/regenerate-client.sh
+```
+
+### Fixing the Conversation Summary Table
+
+If you're experiencing issues with conversation summaries not persisting, try these solutions in order:
+
+#### 1. Node.js Script Fix (Easiest Method)
+
+This is the simplest approach that uses Node.js to directly execute SQL:
+
+```bash
+# Run the Node.js script
+node scripts/manual-fix.js
+```
+
+#### 2. Direct Migration Fix
+
+This approach uses Prisma's migration system:
+
+```bash
+# Make the script executable
+chmod +x scripts/direct-fix.sh
+
+# Run the direct fix script
+./scripts/direct-fix.sh
+```
+
+#### 3. Check Database Tables (Diagnostic)
+
+If you want to check what tables exist in your database:
+
+```bash
+# Make the script executable
+chmod +x scripts/check-db-tables.sh
+
+# Run the check script
+./scripts/check-db-tables.sh
+```
+
+#### 4. Create Summary Table
+
+If you need to create the table directly:
+
+```bash
+# Make the script executable
+chmod +x scripts/create-summary-table.sh
+
+# Run the create table script
+./scripts/create-summary-table.sh
+```
+
+#### 5. Simple Fix (Regenerate Client Only)
+
+If you just need to regenerate the Prisma client:
+
+```bash
+# Make the script executable
+chmod +x scripts/simple-fix.sh
+
+# Run the simple fix script
+./scripts/simple-fix.sh
+```
+
+After running any of these fixes, restart your development server for the changes to take effect.
+
+### Applying the Conversation Summary Migration
+
+To enable persistent conversation summaries, you need to apply the database migration:
+
+```bash
+# Make the script executable
+chmod +x scripts/apply-migrations.sh
+
+# Run the migration script
+./scripts/apply-migrations.sh
+```
+
+Alternatively, you can run the Prisma commands directly:
+
+```bash
+# Apply the migration
+npx prisma migrate dev --name add_conversation_summary
+
+# Generate the Prisma client
+npx prisma generate
+```
+
+This will create the necessary `ConversationSummary` table in your database and update the Prisma client to include the new model.

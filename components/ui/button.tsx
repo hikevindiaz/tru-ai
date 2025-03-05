@@ -22,32 +22,27 @@ const buttonVariants = tv({
         // border
         "border-transparent",
         // text color
-        "text-white",
+        "text-white dark:text-white",
         // background color
-        "bg-blue-500 dark:bg-blue-600",
+        "bg-blue-500 dark:bg-blue-500",
         // hover color
-        "hover:bg-blue-600 dark:hover:bg-blue-500",
+        "hover:bg-blue-600 dark:hover:bg-blue-600",
         // disabled
-        "disabled:bg-blue-300 dark:disabled:bg-blue-800",
-        "disabled:text-white/70 dark:disabled:text-white/50",
-        // Ensure contrast
-        "shadow-sm dark:shadow-blue-900/20",
+        "disabled:bg-blue-300 disabled:text-white",
+        "disabled:dark:bg-blue-800 disabled:dark:text-blue-400",
       ],
       secondary: [
         // border
-        "border-gray-200 dark:border-gray-800",
+        "border-gray-300 dark:border-gray-800",
         // text color
-        "text-gray-900 dark:text-gray-100",
+        "text-gray-900 dark:text-gray-50",
         // background color
-        "bg-white dark:bg-gray-900",
-        // hover
-        "hover:bg-gray-50 hover:border-gray-300",
-        "dark:hover:bg-gray-800 dark:hover:border-gray-700",
+        "bg-white dark:bg-gray-950",
+        //hover color
+        "hover:bg-gray-50 dark:hover:bg-gray-900/60",
         // disabled
-        "disabled:bg-gray-50 disabled:border-gray-200 disabled:text-gray-400",
-        "dark:disabled:bg-gray-900 dark:disabled:border-gray-800 dark:disabled:text-gray-600",
-        // shadow for better contrast
-        "shadow-sm dark:shadow-none",
+        "disabled:text-gray-400",
+        "disabled:dark:text-gray-600",
       ],
       light: [
         // base
@@ -55,14 +50,14 @@ const buttonVariants = tv({
         // border
         "border-transparent",
         // text color
-        "text-gray-700 dark:text-gray-300",
+        "text-gray-900 dark:text-gray-50",
         // background color
-        "bg-gray-100 dark:bg-gray-800",
+        "bg-gray-200 dark:bg-gray-900",
         // hover color
-        "hover:bg-gray-200 dark:hover:bg-gray-700",
+        "hover:bg-gray-300/70 dark:hover:bg-gray-800/80",
         // disabled
-        "disabled:bg-gray-50 dark:disabled:bg-gray-900",
-        "disabled:text-gray-400 dark:disabled:text-gray-600",
+        "disabled:bg-gray-100 disabled:text-gray-400",
+        "disabled:dark:bg-gray-800 disabled:dark:text-gray-600",
       ],
       ghost: [
         // base
@@ -70,39 +65,30 @@ const buttonVariants = tv({
         // border
         "border-transparent",
         // text color
-        "text-gray-700 dark:text-gray-300",
-        // background color
-        "bg-transparent",
+        "text-gray-900 dark:text-gray-50",
         // hover color
-        "hover:bg-gray-100 dark:hover:bg-gray-800",
+        "bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800/80",
         // disabled
-        "disabled:text-gray-400 dark:disabled:text-gray-600",
-        "hover:text-gray-900 dark:hover:text-gray-100",
+        "disabled:text-gray-400",
+        "disabled:dark:text-gray-600",
       ],
       destructive: [
-        // border
-        "border-transparent",
         // text color
         "text-white",
+        // border
+        "border-transparent",
         // background color
-        "bg-red-500 dark:bg-red-600",
+        "bg-red-600 dark:bg-red-700",
         // hover color
-        "hover:bg-red-600 dark:hover:bg-red-500",
+        "hover:bg-red-700 dark:hover:bg-red-600",
         // disabled
-        "disabled:bg-red-300 dark:disabled:bg-red-800",
-        "disabled:text-white/70 dark:disabled:text-white/50",
+        "disabled:bg-red-300 disabled:text-white",
+        "disabled:dark:bg-red-950 disabled:dark:text-red-400",
       ],
-    },
-    size: {
-      sm: "h-8 px-3 text-xs",
-      md: "h-9 px-4 text-sm",
-      lg: "h-10 px-6 text-base",
-      icon: "h-9 w-9 p-2",
     },
   },
   defaultVariants: {
     variant: "primary",
-    size: "md",
   },
 })
 
@@ -123,7 +109,6 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       className,
       disabled,
       variant,
-      size,
       children,
       ...props
     }: ButtonProps,
@@ -133,7 +118,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     return (
       <Component
         ref={forwardedRef}
-        className={cn(buttonVariants({ variant, size }), className)}
+        className={cn(buttonVariants({ variant }), className)}
         disabled={disabled || isLoading}
         tremor-id="tremor-raw"
         {...props}

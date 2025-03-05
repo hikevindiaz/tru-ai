@@ -1,6 +1,6 @@
 // Tremor Input [v1.0.5]
 
-import React from "react"
+import * as React from "react"
 import { RiEyeFill, RiEyeOffFill, RiSearchLine } from "@remixicon/react"
 import { tv, type VariantProps } from "tailwind-variants"
 
@@ -47,7 +47,7 @@ const inputStyles = tv({
   },
 })
 
-interface InputProps
+export interface InputProps
   extends React.InputHTMLAttributes<HTMLInputElement>,
     VariantProps<typeof inputStyles> {
   inputClassName?: string

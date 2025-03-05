@@ -129,14 +129,10 @@ export function AgentSettings({ agent, onSave }: AgentSettingsProps) {
     // Implement delete functionality if needed
   };
 
-  useEffect(() => {
-    // ... existing code
-  }, [form, chatbot.id]); // Add missing dependencies
-
   return (
     <TooltipProvider>
       <div className="flex flex-col h-full max-w-full">
-        <div className="flex-none p-8 pb-0 bg-white dark:bg-gray-950">
+        <div className="flex-none p-8 pb-0">
           <AgentHeader 
             agent={agent}
             onChatClick={handleChatClick}

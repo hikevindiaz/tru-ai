@@ -1,7 +1,8 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
+import prisma from '@/lib/prisma';
 
-import { db } from "@/lib/db"
 import { chatbotSchema } from "@/lib/validations/chatbot";
 import OpenAI from "openai";
 import { getUserSubscriptionPlan } from "@/lib/subscription";
@@ -12,28 +13,34 @@ import { fileTypes as searchFile } from "@/lib/validations/fileSearch";
 export const maxDuration = 60;
 
 export async function GET(request: Request) {
+  // Ensure the user is authenticated
+  const session = await getServerSession(authOptions);
+  if (!session || !session.user?.id) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session) {
-      return new Response("Unauthorized", { status: 403 })
-    }
-
-    const { user } = session
-    const chatbots = await db.chatbot.findMany({
+    // Fetch all chatbots for the user
+    const chatbots = await prisma.chatbot.findMany({
+      where: {
+        userId: session.user.id,
+      },
       select: {
         id: true,
         name: true,
-        createdAt: true,
       },
-      where: {
-        userId: user?.id,
+      orderBy: {
+        name: 'asc',
       },
-    })
-
-    return new Response(JSON.stringify(chatbots))
+    });
+    
+    return NextResponse.json(chatbots);
   } catch (error) {
-    return new Response(null, { status: 500 })
+    console.error("Error fetching chatbots:", error);
+    return NextResponse.json({ 
+      error: "Failed to fetch chatbots",
+      details: error instanceof Error ? error.message : String(error)
+    }, { status: 500 });
   }
 }
 
@@ -49,7 +56,7 @@ export async function POST(req: Request) {
     const { user } = session
     const subscriptionPlan = await getUserSubscriptionPlan(user.id)
 
-    const count = await db.chatbot.count({
+    const count = await prisma.chatbot.count({
       where: {
         userId: user.id,
       },
@@ -62,7 +69,7 @@ export async function POST(req: Request) {
     const json = await req.json()
     const body = chatbotSchema.parse(json)
 
-    const model = await db.chatbotModel.findUnique({
+    const model = await prisma.chatbotModel.findUnique({
       where: {
         id: body.modelId
       }
@@ -72,7 +79,7 @@ export async function POST(req: Request) {
       return new Response("Invalid Model", { status: 400 })
     }
 
-    const openAIConfig = await db.openAIConfig.findUnique({
+    const openAIConfig = await prisma.openAIConfig.findUnique({
       select: {
         globalAPIKey: true,
         id: true,
@@ -90,7 +97,7 @@ export async function POST(req: Request) {
       apiKey: openAIConfig?.globalAPIKey
     })
 
-    const files = await db.file.findMany({
+    const files = await prisma.file.findMany({
       select: {
         id: true,
         openAIFileId: true,
@@ -165,7 +172,7 @@ export async function POST(req: Request) {
       }
     })
 
-    const chatbot = await db.chatbot.create({
+    const chatbot = await prisma.chatbot.create({
       data: {
         name: body.name,
         prompt: body.prompt,
@@ -181,7 +188,7 @@ export async function POST(req: Request) {
       },
     })
 
-    await db.chatbotFiles.createMany(
+    await prisma.chatbotFiles.createMany(
       {
         data: files.map((file) => ({
           chatbotId: chatbot.id,

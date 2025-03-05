@@ -1,118 +1,108 @@
-import { Icons } from "@/components/icons"
+import { Card } from "@/components/ui/card"
+import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
-import { SettingsCard } from "../cards/settings-card"
-import { useState } from "react"
-
-interface Channel {
-  id: string
-  name: string
-  description: string
-  icon: keyof typeof Icons
-  enabled: boolean
-}
+import { 
+  Globe, 
+  MessageSquare, 
+  Phone, 
+  MessagesSquare 
+} from "lucide-react"
 
 export function ChannelsTab() {
-  const [channels, setChannels] = useState<Channel[]>([
-    {
-      id: "widget",
-      name: "Website Widget",
-      description: "Embed a chat widget on your website",
-      icon: "message",
-      enabled: false
-    },
-    {
-      id: "voice",
-      name: "Voice Calling",
-      description: "Enable voice conversations with your customers",
-      icon: "phone",
-      enabled: false
-    },
-    {
-      id: "sms",
-      name: "SMS",
-      description: "Send and receive text messages",
-      icon: "message",
-      enabled: false
-    },
-    {
-      id: "whatsapp",
-      name: "WhatsApp",
-      description: "Connect through WhatsApp messaging",
-      icon: "message",
-      enabled: false
-    },
-    {
-      id: "facebook",
-      name: "Facebook Messenger",
-      description: "Integrate with Facebook Messenger",
-      icon: "facebook",
-      enabled: false
-    },
-    {
-      id: "instagram",
-      name: "Instagram DM",
-      description: "Connect through Instagram Direct Messages",
-      icon: "instagram",
-      enabled: false
-    }
-  ])
-
-  const toggleChannel = (channelId: string) => {
-    setChannels(channels.map(channel => 
-      channel.id === channelId 
-        ? { ...channel, enabled: !channel.enabled }
-        : channel
-    ))
-  }
-
   return (
     <div className="mt-8 space-y-6">
-      <SettingsCard
-        title="Communication Channels"
-        icon={<Icons.settings className="h-4 w-4" />}
-      >
-        <div className="space-y-6">
-          {channels.map((channel) => {
-            const ChannelIcon = Icons[channel.icon]
-            return (
-              <div 
-                key={channel.id}
-                className="flex items-start justify-between"
-              >
-                <div className="flex items-start gap-3">
-                  <ChannelIcon className="h-5 w-5 text-gray-500 mt-1" />
-                  <div>
-                    <p className="font-medium">{channel.name}</p>
-                    <p className="text-sm text-gray-500">
-                      {channel.description}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  {channel.enabled && (
-                    <button
-                      onClick={() => {/* Open configuration modal */}}
-                      className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <Icons.settings className="h-4 w-4 text-gray-500" />
-                    </button>
-                  )}
-                  <Switch
-                    checked={channel.enabled}
-                    onCheckedChange={() => toggleChannel(channel.id)}
-                  />
-                </div>
-              </div>
-            )
-          })}
+      {/* Website */}
+      <Card className="overflow-hidden p-0 bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-800">
+        <div className="border-b border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-900 dark:bg-gray-900">
+          <div className="flex items-center gap-2">
+            <Globe className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+            <Label className="font-medium text-gray-900 dark:text-gray-100">Website</Label>
+          </div>
         </div>
-      </SettingsCard>
+        <div className="p-4 bg-white dark:bg-gray-900/50">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-medium text-gray-900 dark:text-gray-100">Enable Website Chat</p>
+              <p className="text-sm/6 text-gray-500 dark:text-gray-400">
+                Add a chat widget to your website
+              </p>
+            </div>
+            <Switch defaultChecked />
+          </div>
+        </div>
+      </Card>
 
-      <div className="mt-4 text-sm text-gray-500">
-        <p>
-          Enable the channels you want to use for communication. Each channel can be configured after enabling.
-        </p>
-      </div>
+      {/* WhatsApp */}
+      <Card className="overflow-hidden p-0 bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-800">
+        <div className="border-b border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-900 dark:bg-gray-900">
+          <div className="flex items-center gap-2">
+            <MessageSquare className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+            <Label className="font-medium text-gray-900 dark:text-gray-100">WhatsApp</Label>
+            <span className="ml-2 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600 dark:bg-gray-800 dark:text-gray-400">
+              Coming Soon
+            </span>
+          </div>
+        </div>
+        <div className="p-4 bg-white dark:bg-gray-900/50">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-medium text-gray-900 dark:text-gray-100">Enable WhatsApp</p>
+              <p className="text-sm/6 text-gray-500 dark:text-gray-400">
+                Connect your WhatsApp Business account
+              </p>
+            </div>
+            <Switch disabled />
+          </div>
+        </div>
+      </Card>
+
+      {/* SMS */}
+      <Card className="overflow-hidden p-0 bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-800">
+        <div className="border-b border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-900 dark:bg-gray-900">
+          <div className="flex items-center gap-2">
+            <Phone className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+            <Label className="font-medium text-gray-900 dark:text-gray-100">SMS</Label>
+            <span className="ml-2 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600 dark:bg-gray-800 dark:text-gray-400">
+              Coming Soon
+            </span>
+          </div>
+        </div>
+        <div className="p-4 bg-white dark:bg-gray-900/50">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-medium text-gray-900 dark:text-gray-100">Enable SMS</p>
+              <p className="text-sm/6 text-gray-500 dark:text-gray-400">
+                Connect a phone number for SMS
+              </p>
+            </div>
+            <Switch disabled />
+          </div>
+        </div>
+      </Card>
+
+      {/* Facebook Messenger */}
+      <Card className="overflow-hidden p-0 bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-800">
+        <div className="border-b border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-900 dark:bg-gray-900">
+          <div className="flex items-center gap-2">
+            <MessagesSquare className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+            <Label className="font-medium text-gray-900 dark:text-gray-100">Facebook Messenger</Label>
+            <span className="ml-2 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600 dark:bg-gray-800 dark:text-gray-400">
+              Coming Soon
+            </span>
+          </div>
+        </div>
+        <div className="p-4 bg-white dark:bg-gray-900/50">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-medium text-gray-900 dark:text-gray-100">Enable Messenger</p>
+              <p className="text-sm/6 text-gray-500 dark:text-gray-400">
+                Connect your Facebook page
+              </p>
+            </div>
+            <Switch disabled />
+          </div>
+        </div>
+      </Card>
     </div>
   )
 } 

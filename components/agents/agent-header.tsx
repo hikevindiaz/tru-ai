@@ -42,7 +42,7 @@ export function AgentHeader({ agent, onChatClick, onDeleteClick, showActions = t
               <TooltipTrigger asChild>
                 <button
                   onClick={() => copyToClipboard(agent.name, "Name")}
-                  className="text-2xl font-semibold tracking-tight hover:text-gray-600 dark:hover:text-gray-300"
+                  className="text-2xl font-semibold tracking-tight dark:text-white hover:text-gray-600 dark:hover:text-gray-300"
                 >
                   {agent.name}
                 </button>

@@ -20,7 +20,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/Accordion"
-import { Code2, MonitorSmartphone, Settings, Palette, Crown } from "lucide-react"
+import { Code2, MonitorSmartphone, Settings, Palette, Crown, Globe, Layout } from "lucide-react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
@@ -33,6 +33,7 @@ import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import Image from "next/image"
 import { useRef, useEffect } from "react"
+import { Card } from "@/components/ui/card"
 
 interface WidgetTabProps {
   agent: Agent
@@ -187,6 +188,9 @@ export function WidgetTab({ agent, onSave }: WidgetTabProps) {
   const [chatbotLogoURL, setChatbotLogoURL] = useState(agent.chatbotLogoURL || '')
   const [useDefaultImage, setUseDefaultImage] = useState<boolean>(true)
   const inputFileRef = useRef<HTMLInputElement>(null)
+  const [widgetEnabled, setWidgetEnabled] = useState(false)
+  const [theme, setTheme] = useState("light")
+  const [layout, setLayout] = useState("default")
 
   const form = useForm<z.infer<typeof customizationSchema>>({
     resolver: zodResolver(customizationSchema),
@@ -227,7 +231,83 @@ export function WidgetTab({ agent, onSave }: WidgetTabProps) {
   const isSaving = form.formState.isSubmitting
 
   return (
-    <div className="mt-8">
+    <div className="mt-8 space-y-6">
+      {/* Enable Widget */}
+      <Card className="overflow-hidden p-0 bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-800">
+        <div className="border-b border-gray-200 bg-gray-50/50 px-4 py-3 dark:border-gray-800 dark:bg-gray-900/50">
+          <div className="flex items-center gap-2">
+            <Globe className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+            <Label className="font-medium text-gray-900 dark:text-gray-100">Enable Widget</Label>
+          </div>
+        </div>
+        <div className="p-4 bg-white dark:bg-gray-950">
+          <div className="flex items-center justify-between">
+              <div>
+              <p className="font-medium text-gray-900 dark:text-gray-100">Enable Website Widget</p>
+              <p className="text-sm/6 text-gray-500 dark:text-gray-400">
+                Add a chat widget to your website
+              </p>
+            </div>
+            <Switch
+              checked={widgetEnabled}
+              onCheckedChange={setWidgetEnabled}
+            />
+          </div>
+              </div>
+      </Card>
+
+      {/* Theme Selection */}
+      <Card className="overflow-hidden p-0 bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-800">
+        <div className="border-b border-gray-200 bg-gray-50/50 px-4 py-3 dark:border-gray-800 dark:bg-gray-900/50">
+          <div className="flex items-center gap-2">
+            <Palette className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+            <Label className="font-medium text-gray-900 dark:text-gray-100">Theme</Label>
+              </div>
+            </div>
+        <div className="p-4 bg-white dark:bg-gray-950">
+          <div className="flex-1">
+            <div className="relative">
+              <Palette className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400 z-10" />
+              <Input 
+                value={theme}
+                onChange={(e) => setTheme(e.target.value)}
+                placeholder="Enter theme"
+                className="pl-9 bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-800"
+              />
+            </div>
+            <p className="mt-2 text-sm/6 text-gray-500 dark:text-gray-400">
+              Choose the theme for your widget.
+            </p>
+          </div>
+        </div>
+      </Card>
+
+      {/* Layout Selection */}
+      <Card className="overflow-hidden p-0 bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-800">
+        <div className="border-b border-gray-200 bg-gray-50/50 px-4 py-3 dark:border-gray-800 dark:bg-gray-900/50">
+          <div className="flex items-center gap-2">
+            <Layout className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+            <Label className="font-medium text-gray-900 dark:text-gray-100">Layout</Label>
+          </div>
+        </div>
+        <div className="p-4 bg-white dark:bg-gray-950">
+          <div className="flex-1">
+            <div className="relative">
+              <Layout className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400 z-10" />
+              <Input 
+                value={layout}
+                onChange={(e) => setLayout(e.target.value)}
+                placeholder="Enter layout"
+                className="pl-9 bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-800"
+              />
+            </div>
+            <p className="mt-2 text-sm/6 text-gray-500 dark:text-gray-400">
+              Choose the layout for your widget.
+            </p>
+          </div>
+        </div>
+      </Card>
+
       <Accordion
         type="multiple"
         defaultValue={['Customization']}

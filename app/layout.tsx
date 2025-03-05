@@ -2,6 +2,7 @@ import { Analytics } from '@vercel/analytics/react';
 import "@/styles/globals.css";
 import { Inter as FontSans } from "next/font/google";
 import localFont from "next/font/local";
+import { GeistSans } from "geist/font/sans";
 
 import { cn } from "@/lib/utils";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -32,7 +33,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning className={GeistSans.className}>
       <AOSInit />
       <body
         id='root'

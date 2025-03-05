@@ -110,7 +110,7 @@ export function AddonsTab({ agent, onSave }: AddonsTabProps) {
 
   return (
     <>
-      <div className="mt-8 space-y-6">
+      <div className="mt-8 space-y-6 font-medium text-gray-900 dark:text-gray-100">
         <SettingsCard
           title="Add-on Categories"
           icon={<Icons.badgeplus className="h-4 w-4" />}
@@ -128,8 +128,8 @@ export function AddonsTab({ agent, onSave }: AddonsTabProps) {
               {categories.map((category) => {
                 const CategoryIcon = Icons[category.icon]
                 return (
-                  <Card key={category.id} className="p-4">
-                    <div className="space-y-4">
+                  <Card key={category.id} className="p-4 bg-white dark:bg-gray-900/50">
+                    <div className="space-y-4 ">
                       <div className="flex items-start gap-3">
                         <CategoryIcon className="h-5 w-5 text-gray-500 mt-1" />
                         <div>

@@ -81,7 +81,7 @@ function TermsConditionsContent() {
       <p>Subscriptions are billed monthly via Stripe and are non-refundable.</p>
 
       <h3 className="font-semibold text-lg">4. Limitation of Liability</h3>
-      <p>Link AI is provided \"as-is.\" We are not liable for indirect damages.</p>
+      <p>Link AI is provided &quot;as-is.&quot; We are not liable for indirect damages.</p>
     </div>
   );
 }

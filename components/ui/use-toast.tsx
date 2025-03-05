@@ -3,14 +3,16 @@ import * as React from "react"
 
 import { ToastActionElement, type ToastProps } from "@/components/ui/toast"
 
-const TOAST_LIMIT = 1
-const TOAST_REMOVE_DELAY = 1000000
+const TOAST_LIMIT = 5
+const TOAST_REMOVE_DELAY = 5000
 
 type ToasterToast = ToastProps & {
     id: string
     title?: React.ReactNode
     description?: React.ReactNode
     action?: ToastActionElement
+    variant?: "default" | "destructive" | "info" | "success" | "warning" | "error"
+    duration?: number
 }
 
 const actionTypes = {
@@ -53,7 +55,7 @@ interface State {
 
 const toastTimeouts = new Map<string, ReturnType<typeof setTimeout>>()
 
-const addToRemoveQueue = (toastId: string) => {
+const addToRemoveQueue = (toastId: string, duration = TOAST_REMOVE_DELAY) => {
     if (toastTimeouts.has(toastId)) {
         return
     }
@@ -64,7 +66,7 @@ const addToRemoveQueue = (toastId: string) => {
             type: "REMOVE_TOAST",
             toastId: toastId,
         })
-    }, TOAST_REMOVE_DELAY)
+    }, duration)
 
     toastTimeouts.set(toastId, timeout)
 }
@@ -139,6 +141,7 @@ interface Toast extends Omit<ToasterToast, "id"> { }
 
 function toast({ ...props }: Toast) {
     const id = genId()
+    const duration = props.duration || TOAST_REMOVE_DELAY
 
     const update = (props: ToasterToast) =>
         dispatch({
@@ -158,6 +161,11 @@ function toast({ ...props }: Toast) {
             },
         },
     })
+
+    // Auto-dismiss toast after duration
+    if (duration && duration > 0) {
+        setTimeout(dismiss, duration)
+    }
 
     return {
         id: id,

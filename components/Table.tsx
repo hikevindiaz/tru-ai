@@ -1,109 +1,79 @@
 // Tremor Table [v0.0.3]
 
-import React from "react"
+import * as React from "react"
 
 import { cn } from "@/lib/utils"
 
 const TableRoot = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
->(({ className, children, ...props }, forwardedRef) => (
+>(({ className, ...props }, ref) => (
   <div
-    ref={forwardedRef}
-    // Activate if table is used in a float environment
-    // className="flow-root"
-  >
-    <div
-      // make table scrollable on mobile
-      className={cn("w-full overflow-auto whitespace-nowrap", className)}
-      {...props}
-    >
-      {children}
-    </div>
-  </div>
+    ref={ref}
+    className={cn("relative w-full overflow-auto", className)}
+    {...props}
+  />
 ))
 
 TableRoot.displayName = "TableRoot"
 
 const Table = React.forwardRef<
   HTMLTableElement,
-  React.TableHTMLAttributes<HTMLTableElement>
->(({ className, ...props }, forwardedRef) => (
+  React.HTMLAttributes<HTMLTableElement>
+>(({ className, ...props }, ref) => (
   <table
-    ref={forwardedRef}
-    tremor-id="tremor-raw"
-    className={cn(
-      // base
-      "w-full caption-bottom border-b",
-      // border color
-      "border-gray-200 dark:border-gray-800",
-      className,
-    )}
+    ref={ref}
+    className={cn("w-full caption-bottom text-sm", className)}
     {...props}
   />
 ))
 
 Table.displayName = "Table"
 
-const TableHead = React.forwardRef<
+const TableHeader = React.forwardRef<
   HTMLTableSectionElement,
   React.HTMLAttributes<HTMLTableSectionElement>
->(({ className, ...props }, forwardedRef) => (
-  <thead ref={forwardedRef} className={cn(className)} {...props} />
+>(({ className, ...props }, ref) => (
+  <thead ref={ref} className={cn("[&_tr]:border-b", className)} {...props} />
 ))
 
-TableHead.displayName = "TableHead"
-
-const TableHeaderCell = React.forwardRef<
-  HTMLTableCellElement,
-  React.ThHTMLAttributes<HTMLTableCellElement>
->(({ className, ...props }, forwardedRef) => (
-  <th
-    ref={forwardedRef}
-    className={cn(
-      // base
-      "border-b px-4 py-3.5 text-left text-sm font-semibold",
-      // text color
-      "text-gray-900 dark:text-gray-50",
-      // border color
-      "border-gray-200 dark:border-gray-800",
-      className,
-    )}
-    {...props}
-  />
-))
-
-TableHeaderCell.displayName = "TableHeaderCell"
+TableHeader.displayName = "TableHeader"
 
 const TableBody = React.forwardRef<
   HTMLTableSectionElement,
   React.HTMLAttributes<HTMLTableSectionElement>
->(({ className, ...props }, forwardedRef) => (
+>(({ className, ...props }, ref) => (
   <tbody
-    ref={forwardedRef}
-    className={cn(
-      // base
-      "divide-y",
-      // divide color
-      "divide-gray-200 dark:divide-gray-800",
-      className,
-    )}
+    ref={ref}
+    className={cn("[&_tr:last-child]:border-0", className)}
     {...props}
   />
 ))
 
 TableBody.displayName = "TableBody"
 
+const TableFooter = React.forwardRef<
+  HTMLTableSectionElement,
+  React.HTMLAttributes<HTMLTableSectionElement>
+>(({ className, ...props }, ref) => (
+  <tfoot
+    ref={ref}
+    className={cn("bg-gray-50 font-medium text-gray-900 dark:bg-gray-900 dark:text-gray-50", className)}
+    {...props}
+  />
+))
+
+TableFooter.displayName = "TableFooter"
+
 const TableRow = React.forwardRef<
   HTMLTableRowElement,
   React.HTMLAttributes<HTMLTableRowElement>
->(({ className, ...props }, forwardedRef) => (
+>(({ className, ...props }, ref) => (
   <tr
-    ref={forwardedRef}
+    ref={ref}
     className={cn(
-      "[&_td:last-child]:pr-4 [&_th:last-child]:pr-4",
-      "[&_td:first-child]:pl-4 [&_th:first-child]:pl-4",
-      className,
+      "border-b border-gray-200 transition-colors hover:bg-gray-50/50 data-[state=selected]:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-800/50 dark:data-[state=selected]:bg-gray-800",
+      className
     )}
     {...props}
   />
@@ -111,61 +81,51 @@ const TableRow = React.forwardRef<
 
 TableRow.displayName = "TableRow"
 
+const TableHead = React.forwardRef<
+  HTMLTableSectionElement,
+  React.HTMLAttributes<HTMLTableSectionElement>
+>(({ className, ...props }, ref) => (
+  <thead ref={ref} className={cn("", className)} {...props} />
+))
+
+TableHead.displayName = "TableHead"
+
+const TableHeaderCell = React.forwardRef<
+  HTMLTableCellElement,
+  React.ThHTMLAttributes<HTMLTableCellElement>
+>(({ className, ...props }, ref) => (
+  <th
+    ref={ref}
+    className={cn(
+      "h-12 px-4 text-left align-middle font-medium text-gray-500 dark:text-gray-400 [&:has([role=checkbox])]:pr-0",
+      className
+    )}
+    {...props}
+  />
+))
+
+TableHeaderCell.displayName = "TableHeaderCell"
+
 const TableCell = React.forwardRef<
   HTMLTableCellElement,
   React.TdHTMLAttributes<HTMLTableCellElement>
->(({ className, ...props }, forwardedRef) => (
+>(({ className, ...props }, ref) => (
   <td
-    ref={forwardedRef}
-    className={cn(
-      // base
-      "p-4 text-sm",
-      // text color
-      "text-gray-600 dark:text-gray-400",
-      className,
-    )}
+    ref={ref}
+    className={cn("p-4 align-middle [&:has([role=checkbox])]:pr-0", className)}
     {...props}
   />
 ))
 
 TableCell.displayName = "TableCell"
 
-const TableFoot = React.forwardRef<
-  HTMLTableSectionElement,
-  React.HTMLAttributes<HTMLTableSectionElement>
->(({ className, ...props }, forwardedRef) => {
-  return (
-    <tfoot
-      ref={forwardedRef}
-      className={cn(
-        // base
-        "border-t text-left font-medium",
-        // text color
-        "text-gray-900 dark:text-gray-50",
-        // border color
-        "border-gray-200 dark:border-gray-800",
-        className,
-      )}
-      {...props}
-    />
-  )
-})
-
-TableFoot.displayName = "TableFoot"
-
 const TableCaption = React.forwardRef<
   HTMLTableCaptionElement,
   React.HTMLAttributes<HTMLTableCaptionElement>
->(({ className, ...props }, forwardedRef) => (
+>(({ className, ...props }, ref) => (
   <caption
-    ref={forwardedRef}
-    className={cn(
-      // base
-      "mt-3 px-3 text-center text-sm",
-      // text color
-      "text-gray-500 dark:text-gray-500",
-      className,
-    )}
+    ref={ref}
+    className={cn("mt-4 text-sm text-gray-500 dark:text-gray-400", className)}
     {...props}
   />
 ))
@@ -174,12 +134,13 @@ TableCaption.displayName = "TableCaption"
 
 export {
   Table,
+  TableHeader,
   TableBody,
-  TableCaption,
-  TableCell,
-  TableFoot,
+  TableFooter,
   TableHead,
   TableHeaderCell,
-  TableRoot,
   TableRow,
+  TableCell,
+  TableCaption,
+  TableRoot,
 }

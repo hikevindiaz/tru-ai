@@ -1,112 +1,76 @@
+"use client"
+
 // Tremor TabNavigation [v0.1.0]
 
-import * as NavigationMenuPrimitives from "@radix-ui/react-navigation-menu"
-import React from "react"
+import * as React from "react"
+import Link from "next/link"
+import { cva, type VariantProps } from "class-variance-authority"
 
-import { cn, focusRing } from "@/lib/utils"
+import { cn } from "@/lib/utils"
 
-export function getSubtree(
-  options: {
-    asChild?: boolean
-    children: React.ReactNode
-  },
-  content: React.ReactNode | ((children: React.ReactNode) => React.ReactNode),
-) {
-  const { asChild, children } = options
-
-  if (!asChild) {
-    return typeof content === "function" ? content(children) : content
+const tabNavigationVariants = cva(
+  "flex items-center gap-x-2 border-b border-gray-200 dark:border-gray-800",
+  {
+    variants: {
+      size: {
+        default: "px-4",
+        sm: "px-2",
+        lg: "px-6",
+      },
+    },
+    defaultVariants: {
+      size: "default",
+    },
   }
+)
 
-  const firstChild = React.Children.only(children) as React.ReactElement<{
-    children?: React.ReactNode
-    className?: string
-  }>
-  return React.cloneElement(
-    firstChild,
-    undefined,
-    typeof content === "function"
-      ? content(firstChild.props.children)
-      : content,
+export interface TabNavigationProps
+  extends React.HTMLAttributes<HTMLDivElement>,
+    VariantProps<typeof tabNavigationVariants> {}
+
+const TabNavigation = React.forwardRef<HTMLDivElement, TabNavigationProps>(
+  ({ className, size, ...props }, ref) => (
+    <div
+      ref={ref}
+      className={cn(tabNavigationVariants({ size }), className)}
+      {...props}
+    />
   )
-}
-const TabNavigation = React.forwardRef<
-  React.ElementRef<typeof NavigationMenuPrimitives.Root>,
-  Omit<
-    React.ComponentPropsWithoutRef<typeof NavigationMenuPrimitives.Root>,
-    "orientation" | "defaultValue" | "dir"
-  >
->(({ className, children, ...props }, forwardedRef) => (
-  <NavigationMenuPrimitives.Root
-    ref={forwardedRef}
-    {...props}
-    tremor-id="tremor-raw"
-    asChild={false}
-  >
-    <NavigationMenuPrimitives.List
-      className={cn(
-        // base
-        "flex items-center justify-start whitespace-nowrap border-b [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
-        // border color
-        "border-gray-200 dark:border-gray-800",
-        className,
-      )}
-    >
-      {children}
-    </NavigationMenuPrimitives.List>
-  </NavigationMenuPrimitives.Root>
-))
-
+)
 TabNavigation.displayName = "TabNavigation"
 
-const TabNavigationLink = React.forwardRef<
-  React.ElementRef<typeof NavigationMenuPrimitives.Link>,
-  Omit<
-    React.ComponentPropsWithoutRef<typeof NavigationMenuPrimitives.Link>,
-    "onSelect"
-  > & { disabled?: boolean }
->(({ asChild, disabled, className, children, ...props }, forwardedRef) => (
-  <NavigationMenuPrimitives.Item className="flex" aria-disabled={disabled}>
-    <NavigationMenuPrimitives.Link
-      aria-disabled={disabled}
-      className={cn(
-        "group relative flex shrink-0 select-none items-center justify-center",
-        disabled ? "pointer-events-none" : "",
-      )}
-      ref={forwardedRef}
-      onSelect={() => {}}
-      asChild={asChild}
-      {...props}
-    >
-      {getSubtree({ asChild, children }, (children) => (
-        <span
-          className={cn(
-            // base
-            "-mb-px flex items-center justify-center whitespace-nowrap border-b-2 border-transparent px-3 pb-2 text-sm transition-all",
-            // text color
-            "text-gray-500 dark:text-gray-500",
-            // hover
-            "group-hover:text-gray-700 group-hover:dark:text-gray-400",
-            // border hover
-            "group-hover:border-gray-300 group-hover:dark:border-gray-400",
-            // selected
-            "group-data-[active]:border-blue-500 group-data-[active]:text-blue-500",
-            "group-data-[active]:dark:border-blue-500 group-data-[active]:dark:text-blue-500",
-            // disabled
-            disabled
-              ? "pointer-events-none text-gray-300 dark:text-gray-700"
-              : "",
-            focusRing,
-            className,
-          )}
-        >
-          {children}
-        </span>
-      ))}
-    </NavigationMenuPrimitives.Link>
-  </NavigationMenuPrimitives.Item>
-))
+const tabNavigationLinkVariants = cva(
+  "inline-flex items-center border-b-2 border-transparent px-4 py-3 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:border-gray-700 dark:hover:text-gray-200",
+  {
+    variants: {
+      active: {
+        true: "border-blue-500 text-blue-600 dark:border-blue-500 dark:text-blue-400",
+        false: "",
+      },
+    },
+    defaultVariants: {
+      active: false,
+    },
+  }
+)
 
+export interface TabNavigationLinkProps
+  extends React.AnchorHTMLAttributes<HTMLAnchorElement>,
+    VariantProps<typeof tabNavigationLinkVariants> {
+  href: string
+  active?: boolean
+}
+
+const TabNavigationLink = React.forwardRef<HTMLAnchorElement, TabNavigationLinkProps>(
+  ({ className, active, href, ...props }, ref) => (
+    <Link
+      ref={ref}
+      href={href}
+      className={cn(tabNavigationLinkVariants({ active }), className)}
+      {...props}
+    />
+  )
+)
 TabNavigationLink.displayName = "TabNavigationLink"
 
-export { TabNavigation, TabNavigationLink }
+export { TabNavigation, TabNavigationLink, tabNavigationVariants, tabNavigationLinkVariants }

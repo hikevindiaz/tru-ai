@@ -107,6 +107,11 @@ model Chatbot {
   ChatbotErrors         ChatbotErrors[]
   ChatbotMessagesExport ChatbotMessagesExport[]
 
+  knowledgeSources KnowledgeSource[]
+  
+  forms              ChatbotForm[]
+  formSubmissions    FormSubmission[]
+
   @@map(name: "chatbots")
 }
 
@@ -121,8 +126,13 @@ model File {
   crawlerId String?
   crawler   Crawler? @relation(fields: [crawlerId], references: [id], onDelete: Cascade)
 
+  knowledgeSourceId String?
+  knowledgeSource   KnowledgeSource? @relation(fields: [knowledgeSourceId], references: [id])
+
   user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   ChatbotFiles ChatbotFiles[]
+
+  CatalogContent CatalogContent[]
 
   @@map(name: "files")
 }
@@ -152,17 +162,26 @@ model Message {
   createdAt DateTime @default(now()) @map(name: "created_at")
   response  String
   threadId  String   @default("")
-
-  from String @default("unknown")
-
-  userIP String?
-
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
+  from      String   @default("unknown")
+  userIP    String?
+  read      Boolean  @default(false)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   chatbotId String
 
   @@map(name: "messages")
+}
+
+model ConversationSummary {
+  id          String   @id @default(cuid())
+  threadId    String   @unique
+  title       String
+  summary     String   @db.Text
+  createdAt   DateTime @default(now()) @map(name: "created_at")
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map(name: "conversationSummary")
 }
 
 model Crawler {
@@ -229,9 +248,14 @@ model User {
   stripeCurrentPeriodEnd   DateTime? @map(name: "stripe_current_period_end")
   stripeSubscriptionStatus String?
   Message                  Message[]
+  ConversationSummary      ConversationSummary[]
 
   inquiryEmailEnabled   Boolean @default(true)
   marketingEmailEnabled Boolean @default(true)
+
+  knowledgeSources KnowledgeSource[]
+  
+  forms              Form[]
 }
 
 model VerificationToken {
@@ -240,4 +264,170 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model KnowledgeSource {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  createdAt   DateTime @default(now()) @map(name: "created_at")
+  updatedAt   DateTime @updatedAt @map(name: "updated_at")
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  catalogMode String?
+  
+  files           File[]
+  textContents    TextContent[]
+  websiteContents WebsiteContent[]
+  qaContents      QAContent[]
+  catalogContents CatalogContent[]
+
+  chatbots        Chatbot[]
+
+  @@map(name: "knowledge_sources")
+}
+
+model TextContent {
+  id               String         @id @default(cuid())
+  content          String         @db.Text
+  createdAt        DateTime       @default(now()) @map(name: "created_at")
+  updatedAt        DateTime       @updatedAt @map(name: "updated_at")
+  knowledgeSourceId String
+  knowledgeSource  KnowledgeSource @relation(fields: [knowledgeSourceId], references: [id], onDelete: Cascade)
+
+  @@map(name: "text_contents")
+}
+
+model WebsiteContent {
+  id               String         @id @default(cuid())
+  url              String
+  createdAt        DateTime       @default(now()) @map(name: "created_at")
+  updatedAt        DateTime       @updatedAt @map(name: "updated_at")
+  knowledgeSourceId String
+  knowledgeSource  KnowledgeSource @relation(fields: [knowledgeSourceId], references: [id], onDelete: Cascade)
+
+  @@map(name: "website_contents")
+}
+
+model QAContent {
+  id               String         @id @default(cuid())
+  question         String         @db.Text
+  answer           String         @db.Text
+  createdAt        DateTime       @default(now()) @map(name: "created_at")
+  updatedAt        DateTime       @updatedAt @map(name: "updated_at")
+  knowledgeSourceId String
+  knowledgeSource  KnowledgeSource @relation(fields: [knowledgeSourceId], references: [id], onDelete: Cascade)
+
+  @@map(name: "qa_contents")
+}
+
+model CatalogContent {
+  id               String         @id @default(cuid())
+  createdAt        DateTime       @default(now()) @map(name: "created_at")
+  updatedAt        DateTime       @updatedAt @map(name: "updated_at")
+  instructions     String?        @db.Text
+  knowledgeSourceId String
+  knowledgeSource  KnowledgeSource @relation(fields: [knowledgeSourceId], references: [id], onDelete: Cascade)
+  
+  fileId           String?
+  file             File?          @relation(fields: [fileId], references: [id])
+  
+  products         Product[]
+
+  @@map(name: "catalog_contents")
+}
+
+model Product {
+  id               String         @id @default(cuid())
+  title            String
+  description      String?        @db.Text
+  price            Float
+  taxRate          Float
+  categories       String[]
+  createdAt        DateTime       @default(now()) @map(name: "created_at")
+  updatedAt        DateTime       @updatedAt @map(name: "updated_at")
+  
+  catalogContentId String
+  catalogContent   CatalogContent @relation(fields: [catalogContentId], references: [id], onDelete: Cascade)
+
+  @@map(name: "products")
+}
+
+model Form {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  status      String   @default("active") // active, inactive
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  fields      FormField[]
+  submissions FormSubmission[]
+  chatbots    ChatbotForm[]
+
+  @@map(name: "forms")
+}
+
+model FormField {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  type        String   // text, number, email, phone, date, select, address
+  required    Boolean  @default(false)
+  options     String[] // For select type fields
+  position    Int      // For ordering fields
+  
+  formId      String
+  form        Form     @relation(fields: [formId], references: [id], onDelete: Cascade)
+  
+  fieldValues FormFieldValue[]
+
+  @@map(name: "form_fields")
+}
+
+model FormSubmission {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  threadId  String?  // Optional link to conversation thread
+  
+  formId    String
+  form      Form     @relation(fields: [formId], references: [id], onDelete: Cascade)
+  
+  chatbotId String
+  chatbot   Chatbot  @relation(fields: [chatbotId], references: [id], onDelete: Cascade)
+  
+  fieldValues FormFieldValue[]
+
+  @@map(name: "form_submissions")
+}
+
+model FormFieldValue {
+  id         String   @id @default(cuid())
+  value      String
+  
+  fieldId    String
+  field      FormField @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+  
+  submissionId String
+  submission   FormSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+
+  @@map(name: "form_field_values")
+}
+
+model ChatbotForm {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  
+  formId    String
+  form      Form     @relation(fields: [formId], references: [id], onDelete: Cascade)
+  
+  chatbotId String
+  chatbot   Chatbot  @relation(fields: [chatbotId], references: [id], onDelete: Cascade)
+  
+  @@unique([formId, chatbotId])
+  @@map(name: "chatbot_forms")
 }

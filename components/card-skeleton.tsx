@@ -1,5 +1,18 @@
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+
+// Define CardHeader, CardContent, and CardFooter if they are not already defined
+const CardHeader = ({ children, className }) => (
+  <div className={`mb-4 ${className}`}>{children}</div>
+);
+
+const CardContent = ({ children, className }) => (
+  <div className={`mb-4 ${className}`}>{children}</div>
+);
+
+const CardFooter = ({ children, className }) => (
+  <div className={`mt-4 ${className}`}>{children}</div>
+);
 
 export function CardSkeleton() {
   return (

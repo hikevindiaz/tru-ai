@@ -1,11 +1,23 @@
-import { Card } from "@/components/ui/card"
-import { Label } from "@/components/ui/label"
+import { RiExternalLinkLine } from '@remixicon/react';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Divider } from '@/components/Divider';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Icons } from "@/components/icons"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import type { Agent } from "@/types/agent"
 import { SettingsCard } from "../cards/settings-card"
+import { focusInput } from "@/lib/utils"
 
 interface AgentTabProps {
   agent: Agent
@@ -13,118 +25,163 @@ interface AgentTabProps {
 }
 
 export function AgentTab({ agent, onSave }: AgentTabProps) {
+  const languageOptions = [
+    {
+      value: "en",
+      label: "English",
+      emoji: "🇬🇧",
+    },
+    {
+      value: "es",
+      label: "Spanish",
+      emoji: "🇪🇸",
+    },
+    {
+      value: "fr",
+      label: "French",
+      emoji: "🇫🇷",
+    },
+    {
+      value: "de",
+      label: "German",
+      emoji: "🇩🇪",
+    },
+    {
+      value: "it",
+      label: "Italian",
+      emoji: "🇮🇹",
+    },
+    {
+      value: "pt",
+      label: "Portuguese",
+      emoji: "🇵🇹",
+    },
+  ]
+
   return (
     <div className="mt-8 space-y-6">
       {/* Display Name */}
-      <SettingsCard
-        title="Display Name"
-        icon={<Icons.user className="h-4 w-4" />}
-      >
-        <div className="flex-1">
-          <div className="relative">
-            <Icons.user className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+      <Card className="overflow-hidden p-0 bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-900">
+        <div className="border-b border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-900 dark:bg-gray-900">
+          <div className="flex items-center gap-2">
+            <Icons.user className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+            <Label className="font-medium text-gray-900 dark:text-gray-50">Display Name</Label>
+          </div>
+        </div>
+        <div className="p-4 bg-white dark:bg-gray-900/50">
+          <div className="flex-1">
             <Input 
               id="name" 
               defaultValue={agent.name}
               placeholder="Enter agent name"
-              className="pl-9"
+              className="bg-white dark:bg-gray-900/50 border-gray-200 dark:border-gray-900"
             />
+            <p className="mt-2 text-sm/6 text-gray-500 dark:text-gray-400">
+              The name that will identify your agent.
+            </p>
           </div>
-          <p className="mt-2 text-sm/6 text-gray-500 dark:text-gray-500">
-            The name that will identify your agent.
-          </p>
         </div>
-      </SettingsCard>
+      </Card>
 
       {/* Welcome Message */}
-      <SettingsCard
-        title="Welcome Message"
-        icon={<Icons.message className="h-4 w-4" />}
-      >
-        <div className="flex-1">
-          <div className="relative">
-            <Icons.message className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+      <Card className="overflow-hidden p-0 bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-900">
+        <div className="border-b border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-900 dark:bg-gray-900">
+          <div className="flex items-center gap-2">
+            <Icons.message className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+            <Label className="font-medium text-gray-900 dark:text-gray-50">Welcome Message</Label>
+          </div>
+        </div>
+        <div className="p-4 bg-white dark:bg-gray-900/50">
+          <div className="flex-1">
             <Input 
               id="welcome"
               defaultValue={agent.welcomeMessage}
               placeholder="Hello, how can I help you today?"
-              className="pl-9"
+              className="bg-white dark:bg-gray-900/50 border-gray-200 dark:border-gray-900"
             />
+            <p className="mt-2 text-sm/6 text-gray-500 dark:text-gray-400">
+              The welcome message that will be sent to the user when they start a conversation.
+            </p>
           </div>
-          <p className="mt-2 text-sm/6 text-gray-500 dark:text-gray-500">
-            The welcome message that will be sent to the user when they start a conversation.
-          </p>
         </div>
-      </SettingsCard>
+      </Card>
 
       {/* Default Prompt */}
-      <SettingsCard
-        title="Default Prompt"
-        icon={<Icons.post className="h-4 w-4" />}
-      >
-        <div className="flex-1">
-          <div className="relative">
-            <Icons.post className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
+      <Card className="overflow-hidden p-0 bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-900">
+        <div className="border-b border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-900 dark:bg-gray-900">
+          <div className="flex items-center gap-2">
+            <Icons.post className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+            <Label className="font-medium text-gray-900 dark:text-gray-50">Default Prompt</Label>
+          </div>
+        </div>
+        <div className="p-4 bg-white dark:bg-gray-900/50">
+          <div className="flex-1">
             <Textarea 
               id="prompt"
               defaultValue={agent.prompt}
-              className="min-h-[100px] resize-y pl-9"
+              className="min-h-[100px] resize-y bg-white dark:bg-gray-900/50 border-gray-200 dark:border-gray-900"
             />
+            <p className="mt-2 text-sm/6 text-gray-500 dark:text-gray-400">
+              This gives purpose and identity to your LinkRep.
+            </p>
           </div>
-          <p className="mt-2 text-sm/6 text-gray-500 dark:text-gray-500">
-            This gives purpose and identity to your LinkRep.
-          </p>
         </div>
-      </SettingsCard>
+      </Card>
 
-      {/* Language */}
-      <SettingsCard
-        title="Language"
-        icon={<Icons.speech className="h-4 w-4" />}
-      >
-        <div className="flex-1">
-          <div className="relative">
-            <Icons.speech className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 z-10" />
+      {/* Language - Updated Dropdown */}
+      <Card className="overflow-hidden p-0 bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-900">
+        <div className="border-b border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-900 dark:bg-gray-900">
+          <div className="flex items-center gap-2">
+            <Icons.speech className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+            <Label className="font-medium text-gray-900 dark:text-gray-50">Language</Label>
+          </div>
+        </div>
+        <div className="p-4 bg-white dark:bg-gray-900/50">
+          <div className="flex-1">
             <Select defaultValue={agent.language}>
-              <SelectTrigger className="pl-9">
+              <SelectTrigger className={`mt-2 w-full bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-900 ${focusInput}`}>
                 <SelectValue placeholder="Select language" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="en">English</SelectItem>
-                <SelectItem value="es">Spanish</SelectItem>
-                <SelectItem value="fr">French</SelectItem>
-                <SelectItem value="de">German</SelectItem>
-                <SelectItem value="it">Italian</SelectItem>
-                <SelectItem value="pt">Portuguese</SelectItem>
+                {languageOptions.map((item) => (
+                  <SelectItem key={item.value} value={item.value}>
+                    <span className="flex items-center gap-2.5">
+                      <span className="text-lg">{item.emoji}</span>
+                      {item.label}
+                    </span>
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
+            <p className="mt-2 text-sm/6 text-gray-500 dark:text-gray-400">
+              The primary language your LinkRep will use to communicate.
+            </p>
           </div>
-          <p className="mt-2 text-sm/6 text-gray-500 dark:text-gray-500">
-            The primary language your LinkRep will use to communicate.
-          </p>
         </div>
-      </SettingsCard>
+      </Card>
 
       {/* Error Message */}
-      <SettingsCard
-        title="Error Message"
-        icon={<Icons.warning className="h-4 w-4" />}
-      >
-        <div className="flex-1">
-          <div className="relative">
-            <Icons.warning className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+      <Card className="overflow-hidden p-0 bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-900">
+        <div className="border-b border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-900 dark:bg-gray-900">
+          <div className="flex items-center gap-2">
+            <Icons.warning className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+            <Label className="font-medium text-gray-900 dark:text-gray-50">Error Message</Label>
+          </div>
+        </div>
+        <div className="p-4 bg-white dark:bg-gray-900/50">
+          <div className="flex-1">
             <Input 
               id="error"
               defaultValue={agent.errorMessage}
               placeholder="I apologize, but I'm having trouble understanding. Could you please rephrase that?"
-              className="pl-9"
+              className="bg-white dark:bg-gray-900/50 border-gray-200 dark:border-gray-900"
             />
+            <p className="mt-2 text-sm/6 text-gray-500 dark:text-gray-400">
+              Message displayed when your LinkRep encounters an error or cannot understand the user.
+            </p>
           </div>
-          <p className="mt-2 text-sm/6 text-gray-500 dark:text-gray-500">
-            Message displayed when your LinkRep encounters an error or cannot understand the user.
-          </p>
         </div>
-      </SettingsCard>
+      </Card>
     </div>
   )
 } 

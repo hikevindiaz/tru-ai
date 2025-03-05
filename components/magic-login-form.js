@@ -8,6 +8,9 @@ import LoadingDots from "@/components/loading-dots";
 import { magic } from '@/lib/magic'; // Ensure this is correctly initialized
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMagicWandSparkles } from '@fortawesome/free-solid-svg-icons'; // Import the magic wand icon
+import { Input } from '@/components/Input'; // Import the Input component
+import { Button } from '@/components/Button'; // Import the Button component
+import { Label } from '@/components/Label'; // Import the Label component
 
 export default function MagicLoginForm() {
   const [email, setEmail] = useState('');
@@ -43,49 +46,44 @@ export default function MagicLoginForm() {
 
   return (
     <form onSubmit={handleLogin} className="flex flex-col space-y-4">
-      <div className="relative">
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="Enter your email"
-          required
-          className="p-2 rounded-full text-white bg-gradient-to-r from-transparent to-white/10 backdrop-blur-md w-full"
-          style={{
-            borderRadius: '20px',
-            background: 'linear-gradient(117deg, rgba(255, 255, 255, 0.00) -3.91%, rgba(255, 255, 255, 0.04) 75.27%)',
-            backdropFilter: 'blur(21px)',
-            border: 'none',
-            position: 'relative',
-            zIndex: 1,
-          }}
-        />
-        <div
-          className="absolute inset-0 rounded-full"
-          style={{
-            border: '2px solid transparent',
-            background: 'linear-gradient(117deg, rgba(255, 255, 255, 0.00) -3.91%, rgba(255, 255, 255, 0.04) 75.27%)',
-            zIndex: 0,
-          }}
-        ></div>
+      <div className="space-y-4">
+        <div className="space-y-2">
+          <Label
+            htmlFor="email"
+            className="text-sm font-medium text-gray-900 dark:text-gray-50"
+          >
+            Email
+          </Label>
+          <Input
+            type="email"
+            id="email"
+            name="email"
+            autoComplete="email"
+            placeholder="john@company.com"
+            className="mt-2"
+            required
+            aria-required="true"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+        </div>
+        <Button
+          type="submit"
+          disabled={loading}
+          variant="primary"
+          className="flex items-center justify-center text-white p-2 w-full"
+        >
+          {loading ? (
+            <LoadingDots color="#808080" />
+          ) : (
+            <>
+              <FontAwesomeIcon icon={faMagicWandSparkles} className="mr-2" />
+              Send Magic Link
+            </>
+          )}
+        </Button>
       </div>
-      <button
-        type="submit"
-        disabled={loading}
-        className="flex items-center justify-center text-white p-2 rounded"
-        style={{
-          background: '#0075FF',
-        }}
-      >
-        {loading ? (
-          <LoadingDots color="#808080" />
-        ) : (
-          <>
-            <FontAwesomeIcon icon={faMagicWandSparkles} className="mr-2" />
-            Send Magic Link
-          </>
-        )}
-      </button>
     </form>
   );
 }
+  
