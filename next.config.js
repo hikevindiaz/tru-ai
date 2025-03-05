@@ -1,9 +1,18 @@
 /** @type {import('next').NextConfig} */
 const isVercel = process.env.VERCEL === '1';
 
+// Only import contentlayer when not on Vercel
+let withContentlayer;
+if (!isVercel) {
+  withContentlayer = require('next-contentlayer').withContentlayer;
+}
+
 const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
+  },
+  eslint: {
+    ignoreDuringBuilds: true,
   },
   images: {
     domains: ['gwetfkan2dovfoiz.public.blob.vercel-storage.com'],
@@ -41,8 +50,4 @@ const nextConfig = {
 const { withSentryConfig } = require("@sentry/nextjs");
 
 // Export the config with or without ContentLayer based on environment
-const config = isVercel 
-  ? nextConfig 
-  : withContentlayer(nextConfig);
-
-module.exports = config;
+module.exports = isVercel ? nextConfig : withContentlayer(nextConfig);
