@@ -15,7 +15,7 @@ import { cn } from '@/lib/utils';
 import { Card } from '@/components/ui/card';
 import { Divider } from '@/components/Divider';
 import { ProgressCircle } from '@/components/ui/ProgressCircle';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const data = [
   {
