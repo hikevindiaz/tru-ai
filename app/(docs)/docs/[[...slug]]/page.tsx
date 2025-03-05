@@ -1,16 +1,21 @@
 import { notFound } from "next/navigation"
-import { allDocs } from "contentlayer/generated"
-
-import { getTableOfContents } from "@/lib/toc"
-import { Mdx } from "@/components/mdx-components"
-import { DocsPageHeader } from "@/components/page-header"
-import { DocsPager } from "@/components/pager"
-import { DashboardTableOfContents } from "@/components/toc"
-
 import "@/styles/mdx.css"
 import { Metadata } from "next"
-
 import { absoluteUrl } from "@/lib/utils"
+
+// Check if we're running on Vercel
+const isVercel = process.env.VERCEL === '1';
+
+// Import contentlayer only if not on Vercel
+let allDocs: any[] = [];
+if (!isVercel) {
+  try {
+    const { allDocs: docs } = require("contentlayer/generated");
+    allDocs = docs;
+  } catch (error) {
+    console.warn("ContentLayer not available:", error);
+  }
+}
 
 interface DocPageProps {
     params: {
@@ -19,11 +24,13 @@ interface DocPageProps {
 }
 
 async function getDocFromParams(params: any) {
+    if (isVercel) return null;
+    
     const slug = params.slug?.join("/") || ""
     const doc = allDocs.find((doc: any) => doc.slugAsParams === slug)
 
     if (!doc) {
-        null
+        return null
     }
 
     return doc
@@ -74,37 +81,42 @@ export async function generateMetadata({
 export async function generateStaticParams(): Promise<
     DocPageProps["params"][]
 > {
+    if (isVercel) return [];
+    
     return allDocs.map((doc) => ({
         slug: doc.slugAsParams.split("/"),
     }))
 }
 
-// Check if we're running on Vercel
-const isVercel = process.env.VERCEL === '1';
+export default async function DocPage({ params }: DocPageProps) {
+    // If on Vercel, show simplified version
+    if (isVercel) {
+        return (
+            <div className="container mx-auto py-10">
+                <h1 className="text-3xl font-bold mb-4">Documentation</h1>
+                <p>Documentation is currently being updated. Please check back soon.</p>
+                <p className="mt-4">
+                    <a href="/dashboard" className="text-blue-500 hover:underline">
+                        Return to Dashboard
+                    </a>
+                </p>
+            </div>
+        );
+    }
 
-// If on Vercel, use a simplified version that doesn't depend on ContentLayer
-if (isVercel) {
-  export default function DocsPage() {
-    return (
-      <div className="container mx-auto py-10">
-        <h1 className="text-3xl font-bold mb-4">Documentation</h1>
-        <p>Documentation is currently being updated. Please check back soon.</p>
-        <p className="mt-4">
-          <a href="/dashboard" className="text-blue-500 hover:underline">
-            Return to Dashboard
-          </a>
-        </p>
-      </div>
-    );
-  }
-} else {
-  // Original implementation for local development
-  export default async function DocPage({ params }: DocPageProps) {
+    // Original implementation for local development
     const doc = await getDocFromParams(params)
 
     if (!doc) {
         notFound()
     }
+
+    // Import these only when needed (not on Vercel)
+    const { getTableOfContents } = await import("@/lib/toc")
+    const { Mdx } = await import("@/components/mdx-components")
+    const { DocsPageHeader } = await import("@/components/page-header")
+    const { DocsPager } = await import("@/components/pager")
+    const { DashboardTableOfContents } = await import("@/components/toc")
 
     const toc = await getTableOfContents(doc.body.raw)
 
@@ -123,5 +135,4 @@ if (isVercel) {
             </div>
         </main>
     )
-  }
 }

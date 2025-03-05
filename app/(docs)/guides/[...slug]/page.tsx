@@ -1,18 +1,21 @@
-import Link from "next/link"
 import { notFound } from "next/navigation"
-import { allGuides } from "contentlayer/generated"
-
-import { getTableOfContents } from "@/lib/toc"
-import { Icons } from "@/components/icons"
-import { Mdx } from "@/components/mdx-components"
-import { DocsPageHeader } from "@/components/page-header"
-import { DashboardTableOfContents } from "@/components/toc"
-
 import "@/styles/mdx.css"
 import { Metadata } from "next"
-
 import { absoluteUrl, cn } from "@/lib/utils"
-import { buttonVariants } from "@/components/ui/button"
+
+// Check if we're running on Vercel
+const isVercel = process.env.VERCEL === '1';
+
+// Import contentlayer only if not on Vercel
+let allGuides: any[] = [];
+if (!isVercel) {
+  try {
+    const { allGuides: guides } = require("contentlayer/generated");
+    allGuides = guides;
+  } catch (error) {
+    console.warn("ContentLayer not available:", error);
+  }
+}
 
 interface GuidePageProps {
     params: {
@@ -21,11 +24,13 @@ interface GuidePageProps {
 }
 
 async function getGuideFromParams(params: any) {
+    if (isVercel) return null;
+    
     const slug = params?.slug?.join("/")
     const guide = allGuides.find((guide) => guide.slugAsParams === slug)
 
     if (!guide) {
-        null
+        return null
     }
 
     return guide
@@ -76,37 +81,44 @@ export async function generateMetadata({
 export async function generateStaticParams(): Promise<
     GuidePageProps["params"][]
 > {
+    if (isVercel) return [];
+    
     return allGuides.map((guide) => ({
         slug: guide.slugAsParams.split("/"),
     }))
 }
 
-// Check if we're running on Vercel
-const isVercel = process.env.VERCEL === '1';
+export default async function GuidePage({ params }: GuidePageProps) {
+    // If on Vercel, show simplified version
+    if (isVercel) {
+        return (
+            <div className="container mx-auto py-10">
+                <h1 className="text-3xl font-bold mb-4">Guides</h1>
+                <p>Our guides are currently being updated. Please check back soon.</p>
+                <p className="mt-4">
+                    <a href="/dashboard" className="text-blue-500 hover:underline">
+                        Return to Dashboard
+                    </a>
+                </p>
+            </div>
+        );
+    }
 
-// If on Vercel, use a simplified version that doesn't depend on ContentLayer
-if (isVercel) {
-  export default function GuidesPage() {
-    return (
-      <div className="container mx-auto py-10">
-        <h1 className="text-3xl font-bold mb-4">Guides</h1>
-        <p>Our guides are currently being updated. Please check back soon.</p>
-        <p className="mt-4">
-          <a href="/dashboard" className="text-blue-500 hover:underline">
-            Return to Dashboard
-          </a>
-        </p>
-      </div>
-    );
-  }
-} else {
-  // Original implementation for local development
-  export default async function GuidePage({ params }: GuidePageProps) {
+    // Original implementation for local development
     const guide = await getGuideFromParams(params)
 
     if (!guide) {
         notFound()
     }
+
+    // Import these only when needed (not on Vercel)
+    const { getTableOfContents } = await import("@/lib/toc")
+    const { Icons } = await import("@/components/icons")
+    const { Mdx } = await import("@/components/mdx-components")
+    const { DocsPageHeader } = await import("@/components/page-header")
+    const { DashboardTableOfContents } = await import("@/components/toc")
+    const { buttonVariants } = await import("@/components/ui/button")
+    const Link = (await import("next/link")).default
 
     const toc = await getTableOfContents(guide.body.raw)
 
@@ -133,5 +145,4 @@ if (isVercel) {
             </div>
         </main>
     )
-  }
 }
