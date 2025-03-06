@@ -1,6 +1,8 @@
 import { getCurrentUser } from "@/lib/session";
 import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
 // Define our own colors
 const colorCombinations = [
@@ -14,30 +16,60 @@ const colorCombinations = [
 
 interface UserInquiry {
   id: string;
-  email: string;
   name: string;
-  initials: string;
-  chatbotName: string;
-  daysAgo: string;
-  inquiry: string;
+  initial: string;
+  textColor: string;
+  bgColor: string;
+  email: string;
+  href: string;
+  details: { type: string; value: string }[];
 }
+
+interface ChatbotError {
+  agent: string;
+  chatbotId: string;
+  threadId: string;
+  error: string;
+  date: string;
+}
+
+interface MessageData {
+  createdAt: Date;
+}
+
+interface DailyData {
+  name: string;
+  total: number;
+}
+
+interface ChatbotId {
+  id: string;
+}
+
+// Mark this route as dynamic to avoid static generation errors
+export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const user = await getCurrentUser();
-    
-    if (!user) {
-      return new NextResponse("Unauthorized", { status: 401 });
+    const session = await getServerSession(authOptions);
+
+    if (!session) {
+      return new NextResponse(
+        JSON.stringify({
+          error: "Unauthorized",
+        }),
+        { status: 401 }
+      );
     }
 
     let totalAgents = 0;
     let totalFiles = 0;
     let messageCountLast30Days = 0;
-    let messages = [];
+    let messages: MessageData[] = [];
 
     try {
       totalAgents = await db.chatbot.count({
-        where: { userId: user.id },
+        where: { userId: session.user.id },
       });
     } catch (error) {
       console.error('Error counting chatbots:', error);
@@ -45,7 +77,7 @@ export async function GET() {
 
     try {
       totalFiles = await db.file.count({
-        where: { userId: user.id },
+        where: { userId: session.user.id },
       });
     } catch (error) {
       console.error('Error counting files:', error);
@@ -54,14 +86,14 @@ export async function GET() {
     try {
       messageCountLast30Days = await db.message.count({
         where: {
-          userId: user.id,
+          userId: session.user.id,
           createdAt: { gte: new Date(new Date().setDate(new Date().getDate() - 30)) },
         },
       });
 
       messages = await db.message.findMany({
         where: {
-          userId: user.id,
+          userId: session.user.id,
           createdAt: { gte: new Date(new Date().setDate(new Date().getDate() - 30)) },
         },
         select: {
@@ -72,7 +104,7 @@ export async function GET() {
       console.error('Error fetching messages:', error);
     }
 
-    const data = [];
+    const data: DailyData[] = [];
     for (let i = 0; i < 30; i++) {
       const date = new Date();
       date.setDate(date.getDate() - i);
@@ -91,10 +123,10 @@ export async function GET() {
     data.reverse();
 
     // Get chatbot IDs first
-    let chatbotIds = [];
+    let chatbotIds: ChatbotId[] = [];
     try {
       chatbotIds = await db.chatbot.findMany({
-        where: { userId: user.id },
+        where: { userId: session.user.id },
         select: { id: true },
       });
       console.log('Found chatbot IDs:', chatbotIds);
@@ -103,7 +135,7 @@ export async function GET() {
     }
 
     // Fetch user inquiries
-    let userInquiries: UserInquiry[]    = [];
+    let userInquiries: UserInquiry[] = [];
     try {
       const inquiriesData = await db.clientInquiries.findMany({
         where: {
@@ -176,7 +208,7 @@ export async function GET() {
     }
 
     // Fetch chatbot errors
-    let chatbotErrors = [];
+    let chatbotErrors: ChatbotError[] = [];
     try {
       const errors = await db.chatbotErrors.findMany({
         where: {
@@ -225,17 +257,23 @@ export async function GET() {
       console.error('Error fetching chatbot errors:', error);
     }
 
-    return NextResponse.json({
+    const stats = {
       totalAgents,
       totalFiles,
       messageCountLast30Days,
       messagesPerDay: data,
       userInquiries,
       chatbotErrors,
-    });
+    };
 
+    return NextResponse.json(stats);
   } catch (error) {
-    console.error('Main error:', error);
-    return new NextResponse("Internal Error", { status: 500 });
+    console.error("Error fetching dashboard stats:", error);
+    return new NextResponse(
+      JSON.stringify({
+        error: "Internal Server Error",
+      }),
+      { status: 500 }
+    );
   }
 }

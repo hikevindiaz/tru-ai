@@ -1,7 +1,15 @@
 import { siteConfig } from '@/config/site'
 import { twMerge } from 'tailwind-merge'
+import { getSafeGitHubConfig } from "@/lib/utils"
 
-export default function ChangelogPage() {
+export default async function ChangelogPage() {
+    // Add safe GitHub config
+    const safeConfig = getSafeGitHubConfig();
+    
+    // Use the safe config if needed
+    // For example, if you're accessing user.github, you can do:
+    // const githubInfo = user?.github || safeConfig.github;
+    
     return (
         <div className="w-full flex flex-col items-center">
             <div className="w-full text-center p-8 pb-24">

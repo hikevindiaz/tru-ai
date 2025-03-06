@@ -91,4 +91,19 @@ export const focusInput = "focus-visible:outline-none focus-visible:ring-2 focus
 
 export const hasErrorInput = "border-red-500 focus-visible:ring-red-500 dark:border-red-500"
 
+// Add this helper to provide safe GitHub config
+export function getSafeGitHubConfig() {
+  // Default safe GitHub config to prevent errors
+  return {
+    github: {
+      id: "",
+      name: "",
+      email: "",
+    },
+    links: {
+      github: "https://github.com/hikevindiaz/tru-ai"
+    }
+  }
+}
+
 

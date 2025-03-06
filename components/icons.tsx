@@ -22,7 +22,6 @@ import {
   Trash,
   Twitter,
   User,
-  UserRound,
   X,
   BotIcon,
   FolderClosed,
@@ -60,7 +59,6 @@ import {
   Play,
   Pause,
   Cog,
-  MessageSquareHeart,
 } from "lucide-react";
 
 // Import the custom Google icon from Material UI
@@ -101,7 +99,6 @@ export const Icons = {
   bot: BotIcon,
   warning: AlertTriangle,
   user: User,
-  userRound: UserRound,
   arrowRight: ArrowRight,
   arrowUp: ArrowUp,
   arrowDown: ArrowDown,
@@ -128,8 +125,8 @@ export const Icons = {
   play: Play,
   pause: Pause,
   cog: Cog,
-  messageSquareHeart: MessageSquareHeart,
-  userRound: UserRound,
+  messageSquareHeart: MessageSquare,
+  userRound: User,
   // Custom Imported Icons
-  google: GoogleIcon, // Custom Google icon added here
+  google: GoogleIcon,
 };
