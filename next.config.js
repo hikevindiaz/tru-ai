@@ -46,13 +46,7 @@ const nextConfig = {
       },
     ];
   },
-  sentry: {
-    disableServerWebpackPlugin: true,
-    disableClientWebpackPlugin: true,
-  },
 };
-
-const { withSentryConfig } = require("@sentry/nextjs");
 
 // Export the config with or without ContentLayer based on environment
 module.exports = isVercel ? nextConfig : withContentlayer(nextConfig);

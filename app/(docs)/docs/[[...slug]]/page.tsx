@@ -89,7 +89,7 @@ export async function generateMetadata({
 export async function generateStaticParams(): Promise<
     DocPageProps["params"][]
 > {
-    if (isVercel) return [];
+    if (isVercel) return [{ slug: [] }];
     
     // Include the root docs page
     const paths = [{ slug: [] }];

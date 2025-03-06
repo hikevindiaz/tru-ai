@@ -123,7 +123,7 @@ export default async function GuidePage({ params }: GuidePageProps) {
     // Check if this is the index page
     if (params.slug.length === 1 && params.slug[0] === "index") {
         // For the index page, render the guides index
-        const { PageHeader } = await import("@/components/page-header")
+        const { DocsPageHeader } = await import("@/components/page-header")
         const Link = (await import("next/link")).default
         const { cn } = await import("@/lib/utils")
         const { buttonVariants } = await import("@/components/ui/button")
@@ -138,7 +138,7 @@ export default async function GuidePage({ params }: GuidePageProps) {
 
         return (
             <div className="container max-w-4xl py-6 lg:py-10">
-                <PageHeader
+                <DocsPageHeader
                     heading="Guides"
                     text="Learn how to use our product with our comprehensive guides."
                 />
@@ -165,7 +165,7 @@ export default async function GuidePage({ params }: GuidePageProps) {
                                 <Link
                                     href={guide.slug}
                                     className={cn(
-                                        buttonVariants({ variant: "ghost", size: "sm" }),
+                                        buttonVariants({ variant: "ghost" }),
                                         "h-8 w-full justify-start p-0"
                                     )}
                                 >
