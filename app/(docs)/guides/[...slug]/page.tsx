@@ -10,11 +10,16 @@ const isVercel = process.env.VERCEL === '1';
 let allGuides: any[] = [];
 if (!isVercel) {
   try {
-    const { allGuides: guides } = require("contentlayer/generated");
-    allGuides = guides;
+    // Use dynamic import with require to avoid build errors
+    const contentlayer = require("contentlayer/generated");
+    allGuides = contentlayer.allGuides || [];
   } catch (error) {
     console.warn("ContentLayer not available:", error);
+    allGuides = [];
   }
+} else {
+  // On Vercel, use empty array
+  allGuides = [];
 }
 
 interface GuidePageProps {
@@ -103,6 +108,9 @@ export async function generateStaticParams(): Promise<
     
     return paths;
 }
+
+// Mark this page as dynamic to prevent static generation errors
+export const dynamic = 'force-dynamic';
 
 export default async function GuidePage({ params }: GuidePageProps) {
     // Add safe GitHub config
