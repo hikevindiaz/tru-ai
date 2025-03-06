@@ -12,6 +12,9 @@ export const metadata = {
 
 export default async function SupportPage() {
     const safeConfig = getSafeGitHubConfig();
+    
+    // Default GitHub issues URL
+    const githubIssuesUrl = "https://github.com/hikevindiaz/tru-ai/issues";
 
     return (
         <DashboardShell>
@@ -34,7 +37,7 @@ export default async function SupportPage() {
                 <p className="text-muted-foreground">
                     First, before reaching out you can always try our chatbot. He knows a lot about our platform he might be able to help you.
                     <br />
-                    If you still have issue with our app you can open a <a className="underline" href={safeConfig.links.github + '/issues'}>Github issue</a>, so we can help you to fix it and it will help us to improve our app.
+                    If you still have issue with our app you can open a <a className="underline" href={githubIssuesUrl}>Github issue</a>, so we can help you to fix it and it will help us to improve our app.
                 </p>
                 <div className="min-w-[85%] min-h-[15rem] text-left items-left pt-6">
                     <iframe
