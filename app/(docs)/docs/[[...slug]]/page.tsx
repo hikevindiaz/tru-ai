@@ -3,6 +3,9 @@ import "@/styles/mdx.css"
 import { Metadata } from "next"
 import { absoluteUrl, getSafeGitHubConfig } from "@/lib/utils"
 
+// Ensure this page is always rendered dynamically
+export const dynamic = 'force-dynamic';
+
 // Check if we're running on Vercel
 const isVercel = process.env.VERCEL === '1';
 
@@ -44,6 +47,9 @@ async function getDocFromParams(params: any) {
 export async function generateMetadata({
     params,
 }: DocPageProps): Promise<Metadata> {
+    // Make sure we have the safe GitHub config
+    const safeConfig = getSafeGitHubConfig();
+    
     // If this is the index page
     if (!params.slug || params.slug.length === 0) {
         return {
@@ -94,6 +100,9 @@ export async function generateMetadata({
 export async function generateStaticParams(): Promise<
     DocPageProps["params"][]
 > {
+    // Make sure we have the safe GitHub config
+    const safeConfig = getSafeGitHubConfig();
+    
     if (isVercel) return [{ slug: [] }];
     
     // Include the root docs page
@@ -109,10 +118,7 @@ export async function generateStaticParams(): Promise<
     return paths;
 }
 
-// Mark this page as dynamic to prevent static generation errors
-export const dynamic = 'force-dynamic';
-
-export default async function DocPage({ params }: DocPageProps) {
+export default function DocPage({ params }: DocPageProps) {
     // Add safe GitHub config
     const safeConfig = getSafeGitHubConfig();
     
@@ -133,83 +139,51 @@ export default async function DocPage({ params }: DocPageProps) {
 
     // Check if this is the index page
     if (!params.slug || params.slug.length === 0) {
-        // For the index page, render the docs index
-        const { DocsPageHeader } = await import("@/components/page-header")
-        const Link = (await import("next/link")).default
-
-        // Get unique doc categories
-        const categories = Array.from(
-            new Set(allDocs.map((doc) => doc.category))
-        ).sort();
-
         return (
             <div className="container max-w-4xl py-6 lg:py-10">
-                <DocsPageHeader 
-                    heading="Documentation" 
-                    text="Learn how to use our product with our comprehensive documentation." 
-                />
-                <div className="grid gap-8">
-                    {categories.map((category) => {
-                        const categoryDocs = allDocs
-                            .filter((doc) => doc.category === category)
-                            .sort((a, b) => a.title.localeCompare(b.title));
-
-                        return (
-                            <div key={category} className="space-y-4">
-                                <h2 className="text-2xl font-bold">{category}</h2>
-                                <div className="grid gap-4 md:grid-cols-2">
-                                    {categoryDocs.map((doc) => (
-                                        <Link
-                                            key={doc._id}
-                                            href={doc.slug}
-                                            className="group rounded-lg border p-4 hover:bg-muted"
-                                        >
-                                            <h3 className="font-medium">{doc.title}</h3>
-                                            {doc.description && (
-                                                <p className="text-sm text-muted-foreground">
-                                                    {doc.description}
-                                                </p>
-                                            )}
-                                        </Link>
-                                    ))}
-                                </div>
-                            </div>
-                        );
-                    })}
+                <div className="flex flex-col items-start gap-4 md:flex-row md:justify-between md:gap-8">
+                    <div className="flex-1 space-y-4">
+                        <h1 className="inline-block text-4xl font-bold tracking-tight lg:text-5xl">
+                            Documentation
+                        </h1>
+                        <p className="text-xl text-muted-foreground">
+                            Learn how to use our product with our comprehensive documentation.
+                        </p>
+                    </div>
+                </div>
+                <div className="grid gap-8 mt-8">
+                    <div className="space-y-4">
+                        <h2 className="text-2xl font-bold">Getting Started</h2>
+                        <div className="grid gap-4 md:grid-cols-2">
+                            <a href="/docs/introduction" className="group rounded-lg border p-4 hover:bg-muted">
+                                <h3 className="font-medium">Introduction</h3>
+                                <p className="text-sm text-muted-foreground">
+                                    Learn the basics of our platform.
+                                </p>
+                            </a>
+                            <a href="/docs/installation" className="group rounded-lg border p-4 hover:bg-muted">
+                                <h3 className="font-medium">Installation</h3>
+                                <p className="text-sm text-muted-foreground">
+                                    How to install and set up our product.
+                                </p>
+                            </a>
+                        </div>
+                    </div>
                 </div>
             </div>
         );
     }
 
-    // For individual doc pages, render the doc content
-    const doc = await getDocFromParams(params)
-
-    if (!doc) {
-        notFound()
-    }
-
-    // Import these only when needed (not on Vercel)
-    const { getTableOfContents } = await import("@/lib/toc")
-    const { Mdx } = await import("@/components/mdx-components")
-    const { DocsPageHeader } = await import("@/components/page-header")
-    const { DocsPager } = await import("@/components/pager")
-    const { DashboardTableOfContents } = await import("@/components/toc")
-
-    const toc = await getTableOfContents(doc.body.raw)
-
+    // For individual doc pages, show a simplified version
     return (
-        <main className="relative py-6 lg:gap-10 lg:py-10 xl:grid xl:grid-cols-[1fr_300px]">
-            <div className="mx-auto w-full min-w-0">
-                <DocsPageHeader heading={doc.title} text={doc.description} />
-                <Mdx code={doc.body.code} />
-                <hr className="my-4 md:my-6" />
-                <DocsPager doc={doc} />
-            </div>
-            <div className="hidden text-sm xl:block">
-                <div className="sticky top-16 -mt-10 max-h-[calc(var(--vh)-4rem)] overflow-y-auto pt-10">
-                    <DashboardTableOfContents toc={toc} />
-                </div>
-            </div>
-        </main>
-    )
+        <div className="container mx-auto py-10">
+            <h1 className="text-3xl font-bold mb-4">Documentation Content</h1>
+            <p>This documentation page is currently being updated. Please check back soon.</p>
+            <p className="mt-4">
+                <a href="/docs" className="text-blue-500 hover:underline">
+                    Return to Documentation
+                </a>
+            </p>
+        </div>
+    );
 }
