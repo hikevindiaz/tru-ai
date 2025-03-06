@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation"
 import "@/styles/mdx.css"
 import { Metadata } from "next"
-import { absoluteUrl, cn } from "@/lib/utils"
+import { absoluteUrl, cn, getSafeGitHubConfig } from "@/lib/utils"
 
 // Check if we're running on Vercel
 const isVercel = process.env.VERCEL === '1';
@@ -105,6 +105,9 @@ export async function generateStaticParams(): Promise<
 }
 
 export default async function GuidePage({ params }: GuidePageProps) {
+    // Add safe GitHub config
+    const safeConfig = getSafeGitHubConfig();
+    
     // If on Vercel, show simplified version
     if (isVercel) {
         return (
