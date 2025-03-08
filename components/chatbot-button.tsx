@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
 import Image from 'next/image';
-import PulsingLogo from './PulsingLogo';
+import GradientAgentSphere from './gradientagentsphere';
 
 export interface ChatbotButtonComponentProps {
     textColor?: string;
@@ -122,7 +122,7 @@ export default function ChatbotButton({
                                 className="object-cover"
                             />
                         ) : (
-                            <PulsingLogo size={36} gradientColors={gradientColors} />
+                            <GradientAgentSphere />
                         )}
                     </div>
                     

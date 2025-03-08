@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import PulsingLogo from '@/components/PulsingLogo'
+import AnimatedSphere from '@/components/AnimatedSphere'
 
 export default function LogoPreviewPage() {
   const [selectedColorScheme, setSelectedColorScheme] = useState<string>('default')
@@ -89,6 +90,18 @@ export default function LogoPreviewPage() {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+          <h2 className="text-xl font-semibold mb-4">Animated Sphere Preview</h2>
+          <div className="flex justify-center">
+            <AnimatedSphere 
+              size={120} 
+              gradientColors={colorSchemes[selectedColorScheme as keyof typeof colorSchemes]} 
+              particleCount={50} 
+              interactive={true}
+            />
           </div>
         </div>
       </div>
