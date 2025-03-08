@@ -23,6 +23,7 @@ export interface PaymentMethod {
   icon: React.ComponentType<any>;
   instructions?: string;
   isDefault?: boolean;
+  order?: number;
 }
 
 interface PaymentSettingsProps {
@@ -36,6 +37,17 @@ export function PaymentSettings({
 }: PaymentSettingsProps) {
   const [editingMethod, setEditingMethod] = useState<PaymentMethod | null>(null);
   const [isAddingNew, setIsAddingNew] = useState(false);
+
+  const sortedPaymentMethods = [...paymentMethods].sort((a, b) => {
+    if (a.id === "cash") return -1;
+    if (b.id === "cash") return 1;
+    
+    if (a.order !== undefined && b.order !== undefined) {
+      return a.order - b.order;
+    }
+    
+    return 0;
+  });
 
   const handleToggleMethod = (id: string) => {
     const updatedMethods = paymentMethods.map(method => 
@@ -113,7 +125,7 @@ export function PaymentSettings({
       <div className="flex justify-between items-center">
         <h3 className="text-sm font-medium">Payment Methods</h3>
         <Button 
-          variant="outline" 
+          variant="secondary" 
           className="h-8 text-xs"
           onClick={handleAddNewMethod}
         >
@@ -122,7 +134,7 @@ export function PaymentSettings({
         </Button>
       </div>
       
-      {paymentMethods.map((method) => {
+      {sortedPaymentMethods.map((method) => {
         const MethodIcon = method.icon;
         return (
           <Card key={method.id} className="p-4">

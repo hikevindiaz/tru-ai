@@ -1,6 +1,14 @@
+import { useState } from "react";
 import { Button } from "@/components/Button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Order, OrderItem, statusConfig } from "@/lib/orders-data";
@@ -12,16 +20,35 @@ import {
   RiPriceTag3Line,
   RiFileListLine,
   RiSettings3Line,
-  RiCheckboxCircleLine
+  RiCheckboxCircleLine,
+  RiPhoneLine,
+  RiTruckLine,
+  RiWalletLine,
+  RiUserStarLine
 } from "@remixicon/react";
 
 interface OrderDetailsProps {
   order: Order;
+  onUpdateStatus?: (orderId: string, newStatus: string) => void;
 }
 
-export function OrderDetails({ order }: OrderDetailsProps) {
-  const StatusIcon = statusConfig[order.status as keyof typeof statusConfig]?.icon || RiFileListLine;
-  const statusColor = statusConfig[order.status as keyof typeof statusConfig]?.color || "text-gray-500";
+export function OrderDetails({ order, onUpdateStatus }: OrderDetailsProps) {
+  const [currentStatus, setCurrentStatus] = useState(order.status);
+  
+  const StatusIcon = statusConfig[currentStatus as keyof typeof statusConfig]?.icon || RiFileListLine;
+  const statusColor = statusConfig[currentStatus as keyof typeof statusConfig]?.color || "text-gray-500";
+  
+  // Function to capitalize first letter
+  const capitalize = (str: string) => {
+    return str.charAt(0).toUpperCase() + str.slice(1);
+  };
+  
+  const handleStatusChange = (newStatus: string) => {
+    setCurrentStatus(newStatus);
+    if (onUpdateStatus) {
+      onUpdateStatus(order.id, newStatus);
+    }
+  };
   
   return (
     <div className="flex h-full flex-col">
@@ -34,11 +61,15 @@ export function OrderDetails({ order }: OrderDetailsProps) {
                 Order {order.id}
               </h1>
               <Badge 
-                variant={(statusConfig[order.status as keyof typeof statusConfig]?.variant || "default") as any}
+                variant={(statusConfig[currentStatus as keyof typeof statusConfig]?.variant || "default") as any}
                 className="ml-2"
               >
-                {order.status}
+                {capitalize(currentStatus)}
               </Badge>
+              <div className="flex items-center ml-3 text-sm text-blue-500">
+                <RiUserStarLine className="h-4 w-4 mr-1" />
+                {order.agent.name}
+              </div>
             </div>
             <div className="mt-1 flex items-center gap-2">
               <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -51,9 +82,26 @@ export function OrderDetails({ order }: OrderDetailsProps) {
           </div>
           
           <div className="flex space-x-2">
-            <Button variant="secondary">
-              Update Status
-            </Button>
+            <Select value={currentStatus} onValueChange={handleStatusChange}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Update Status" />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.entries(statusConfig)
+                  .filter(([key]) => key !== 'all')
+                  .map(([status, config]) => {
+                    const StatusIcon = config.icon;
+                    return (
+                      <SelectItem key={status} value={status}>
+                        <div className="flex items-center gap-2">
+                          <StatusIcon className={cn("size-4", config.color)} />
+                          <span>{config.label}</span>
+                        </div>
+                      </SelectItem>
+                    );
+                  })}
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </div>
@@ -78,25 +126,39 @@ export function OrderDetails({ order }: OrderDetailsProps) {
                   </p>
                 </div>
               </div>
+              
               <div className="flex items-start">
-                <RiMapPinLine className="h-5 w-5 text-gray-400 mr-2 mt-0.5" />
+                <RiPhoneLine className="h-5 w-5 text-gray-400 mr-2 mt-0.5" />
                 <div>
                   <p className="text-sm font-medium text-gray-900 dark:text-gray-50">
-                    Shipping Address
+                    Phone Number
                   </p>
                   <p className="text-sm text-gray-500 dark:text-gray-400">
-                    {order.shippingAddress}
+                    {order.customerPhone}
                   </p>
                 </div>
               </div>
+              
               <div className="flex items-start">
-                <RiCalendarLine className="h-5 w-5 text-gray-400 mr-2 mt-0.5" />
+                <RiTruckLine className="h-5 w-5 text-gray-400 mr-2 mt-0.5" />
                 <div>
                   <p className="text-sm font-medium text-gray-900 dark:text-gray-50">
-                    Order Date
+                    Delivery Method
                   </p>
                   <p className="text-sm text-gray-500 dark:text-gray-400">
-                    {order.createdAt.toLocaleDateString()} at {order.createdAt.toLocaleTimeString()}
+                    {order.deliveryMethod}
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex items-start">
+                <RiUserStarLine className="h-5 w-5 text-blue-500 mr-2 mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium text-gray-900 dark:text-gray-50">
+                    Agent
+                  </p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    {order.agent.name}
                   </p>
                 </div>
               </div>
@@ -110,7 +172,7 @@ export function OrderDetails({ order }: OrderDetailsProps) {
             </h2>
             <div className="space-y-3">
               <div className="flex items-start">
-                <RiPriceTag3Line className="h-5 w-5 text-gray-400 mr-2 mt-0.5" />
+                <RiWalletLine className="h-5 w-5 text-gray-400 mr-2 mt-0.5" />
                 <div>
                   <p className="text-sm font-medium text-gray-900 dark:text-gray-50">
                     Payment Method
@@ -120,6 +182,19 @@ export function OrderDetails({ order }: OrderDetailsProps) {
                   </p>
                 </div>
               </div>
+              
+              <div className="flex items-start">
+                <RiCalendarLine className="h-5 w-5 text-gray-400 mr-2 mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium text-gray-900 dark:text-gray-50">
+                    Order Date
+                  </p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    {order.createdAt.toLocaleDateString()} at {order.createdAt.toLocaleTimeString()}
+                  </p>
+                </div>
+              </div>
+              
               <div className="flex items-start">
                 <StatusIcon className={cn("h-5 w-5 mr-2 mt-0.5", statusColor)} />
                 <div>
@@ -127,7 +202,19 @@ export function OrderDetails({ order }: OrderDetailsProps) {
                     Order Status
                   </p>
                   <p className="text-sm text-gray-500 dark:text-gray-400">
-                    {statusConfig[order.status as keyof typeof statusConfig]?.label || order.status}
+                    {statusConfig[currentStatus as keyof typeof statusConfig]?.label || capitalize(currentStatus)}
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex items-start">
+                <RiMapPinLine className="h-5 w-5 text-gray-400 mr-2 mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium text-gray-900 dark:text-gray-50">
+                    Shipping Address
+                  </p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    {order.shippingAddress}
                   </p>
                 </div>
               </div>
@@ -198,12 +285,12 @@ export function OrderDetails({ order }: OrderDetailsProps) {
               <div className="flex items-start">
                 <div className="flex-shrink-0">
                   <div className={cn("h-8 w-8 rounded-full flex items-center justify-center", 
-                    order.status === 'new' || order.status === 'processing' || order.status === 'completed' 
+                    currentStatus === 'new' || currentStatus === 'confirmed' || currentStatus === 'preparing' || currentStatus === 'ready' || currentStatus === 'completed'
                       ? "bg-green-100 dark:bg-green-900/20" 
                       : "bg-gray-100 dark:bg-gray-800"
                   )}>
                     <RiFileListLine className={cn("h-4 w-4", 
-                      order.status === 'new' || order.status === 'processing' || order.status === 'completed' 
+                      currentStatus === 'new' || currentStatus === 'confirmed' || currentStatus === 'preparing' || currentStatus === 'ready' || currentStatus === 'completed'
                         ? "text-green-600 dark:text-green-400" 
                         : "text-gray-400"
                     )} />
@@ -222,12 +309,12 @@ export function OrderDetails({ order }: OrderDetailsProps) {
               <div className="flex items-start">
                 <div className="flex-shrink-0">
                   <div className={cn("h-8 w-8 rounded-full flex items-center justify-center", 
-                    order.status === 'processing' || order.status === 'completed' 
+                    currentStatus === 'confirmed' || currentStatus === 'preparing' || currentStatus === 'ready' || currentStatus === 'completed'
                       ? "bg-green-100 dark:bg-green-900/20" 
                       : "bg-gray-100 dark:bg-gray-800"
                   )}>
-                    <RiSettings3Line className={cn("h-4 w-4", 
-                      order.status === 'processing' || order.status === 'completed' 
+                    <RiCheckboxCircleLine className={cn("h-4 w-4", 
+                      currentStatus === 'confirmed' || currentStatus === 'preparing' || currentStatus === 'ready' || currentStatus === 'completed'
                         ? "text-green-600 dark:text-green-400" 
                         : "text-gray-400"
                     )} />
@@ -235,12 +322,10 @@ export function OrderDetails({ order }: OrderDetailsProps) {
                 </div>
                 <div className="ml-4 min-w-0 flex-1">
                   <p className="text-sm font-medium text-gray-900 dark:text-gray-50">
-                    Processing
+                    Order Confirmed
                   </p>
                   <p className="text-sm text-gray-500 dark:text-gray-400">
-                    {order.status === 'new' ? 'Pending' : 
-                     order.status === 'cancelled' ? 'Cancelled' : 
-                     'In progress'}
+                    {currentStatus === 'new' || currentStatus === 'cancelled' ? 'Pending' : 'Confirmed'}
                   </p>
                 </div>
               </div>
@@ -248,12 +333,62 @@ export function OrderDetails({ order }: OrderDetailsProps) {
               <div className="flex items-start">
                 <div className="flex-shrink-0">
                   <div className={cn("h-8 w-8 rounded-full flex items-center justify-center", 
-                    order.status === 'completed' 
+                    currentStatus === 'preparing' || currentStatus === 'ready' || currentStatus === 'completed'
+                      ? "bg-green-100 dark:bg-green-900/20" 
+                      : "bg-gray-100 dark:bg-gray-800"
+                  )}>
+                    <RiSettings3Line className={cn("h-4 w-4", 
+                      currentStatus === 'preparing' || currentStatus === 'ready' || currentStatus === 'completed'
+                        ? "text-green-600 dark:text-green-400" 
+                        : "text-gray-400"
+                    )} />
+                  </div>
+                </div>
+                <div className="ml-4 min-w-0 flex-1">
+                  <p className="text-sm font-medium text-gray-900 dark:text-gray-50">
+                    Preparing
+                  </p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    {currentStatus === 'new' || currentStatus === 'confirmed' || currentStatus === 'cancelled' ? 'Pending' : 
+                     currentStatus === 'preparing' ? 'In progress' : 'Completed'}
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex items-start">
+                <div className="flex-shrink-0">
+                  <div className={cn("h-8 w-8 rounded-full flex items-center justify-center", 
+                    currentStatus === 'ready' || currentStatus === 'completed'
+                      ? "bg-green-100 dark:bg-green-900/20" 
+                      : "bg-gray-100 dark:bg-gray-800"
+                  )}>
+                    <RiTruckLine className={cn("h-4 w-4", 
+                      currentStatus === 'ready' || currentStatus === 'completed'
+                        ? "text-green-600 dark:text-green-400" 
+                        : "text-gray-400"
+                    )} />
+                  </div>
+                </div>
+                <div className="ml-4 min-w-0 flex-1">
+                  <p className="text-sm font-medium text-gray-900 dark:text-gray-50">
+                    Ready for {order.deliveryMethod === "In-Store Pickup" ? "Pickup" : "Delivery"}
+                  </p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    {currentStatus === 'ready' ? 'Ready now' : 
+                     currentStatus === 'completed' ? 'Completed' : 'Pending'}
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex items-start">
+                <div className="flex-shrink-0">
+                  <div className={cn("h-8 w-8 rounded-full flex items-center justify-center", 
+                    currentStatus === 'completed' 
                       ? "bg-green-100 dark:bg-green-900/20" 
                       : "bg-gray-100 dark:bg-gray-800"
                   )}>
                     <RiCheckboxCircleLine className={cn("h-4 w-4", 
-                      order.status === 'completed' 
+                      currentStatus === 'completed' 
                         ? "text-green-600 dark:text-green-400" 
                         : "text-gray-400"
                     )} />
@@ -264,7 +399,7 @@ export function OrderDetails({ order }: OrderDetailsProps) {
                     Completed
                   </p>
                   <p className="text-sm text-gray-500 dark:text-gray-400">
-                    {order.status === 'completed' ? 'Order fulfilled' : 'Pending'}
+                    {currentStatus === 'completed' ? 'Order fulfilled' : 'Pending'}
                   </p>
                 </div>
               </div>

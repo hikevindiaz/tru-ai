@@ -2,16 +2,22 @@ import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/Button";
 import { Divider } from "@/components/Divider";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select";
 import { 
   RiNotification3Line,
   RiPhoneLine,
   RiMessage2Line
 } from "@remixicon/react";
-import { statusConfig } from "@/lib/orders-data";
+import { statusConfig, availablePhoneNumbers } from "@/lib/orders-data";
 
 export interface NotificationTemplate {
   status: string;
@@ -21,6 +27,7 @@ export interface NotificationTemplate {
 
 export interface NotificationSettings {
   smsEnabled: boolean;
+  phoneNumberId?: string;
   phoneNumber: string;
   templates: NotificationTemplate[];
 }
@@ -43,11 +50,15 @@ export function NotificationSettings({
     });
   };
 
-  const handlePhoneNumberChange = (phoneNumber: string) => {
-    onSettingsChange({
-      ...settings,
-      phoneNumber
-    });
+  const handlePhoneNumberChange = (phoneNumberId: string) => {
+    const selectedPhone = availablePhoneNumbers.find(p => p.id === phoneNumberId);
+    if (selectedPhone) {
+      onSettingsChange({
+        ...settings,
+        phoneNumberId,
+        phoneNumber: selectedPhone.number
+      });
+    }
   };
 
   const handleToggleTemplate = (status: string) => {
@@ -89,6 +100,11 @@ export function NotificationSettings({
     setEditingTemplate({ ...editingTemplate, message });
   };
 
+  // Function to capitalize first letter
+  const capitalize = (str: string) => {
+    return str.charAt(0).toUpperCase() + str.slice(1);
+  };
+
   return (
     <div className="space-y-4">
       <Card className="p-4">
@@ -112,13 +128,21 @@ export function NotificationSettings({
               <div className="mt-4">
                 <Label htmlFor="phone-number" className="text-xs">Store Phone Number</Label>
                 <div className="flex mt-1">
-                  <Input 
-                    id="phone-number" 
-                    value={settings.phoneNumber} 
-                    onChange={(e) => handlePhoneNumberChange(e.target.value)} 
-                    placeholder="+1 (555) 123-4567"
-                    className="max-w-xs"
-                  />
+                  <Select 
+                    value={settings.phoneNumberId || availablePhoneNumbers[0].id} 
+                    onValueChange={handlePhoneNumberChange}
+                  >
+                    <SelectTrigger className="max-w-xs">
+                      <SelectValue placeholder="Select a phone number" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availablePhoneNumbers.map((phone) => (
+                        <SelectItem key={phone.id} value={phone.id}>
+                          {phone.number}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                   This number will be used as the sender for SMS notifications
@@ -150,7 +174,7 @@ export function NotificationSettings({
                     </div>
                     <div>
                       <h4 className="text-sm font-medium text-gray-900 dark:text-gray-50">
-                        {statusInfo?.label || status} Notification
+                        {statusInfo?.label || capitalize(status)} Notification
                       </h4>
                       <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                         {template.message.length > 100 
@@ -183,7 +207,7 @@ export function NotificationSettings({
               <Divider />
               <Card className="p-4">
                 <h4 className="text-sm font-medium mb-4">
-                  Edit {statusConfig[editingTemplate.status as keyof typeof statusConfig]?.label || editingTemplate.status} Notification
+                  Edit {statusConfig[editingTemplate.status as keyof typeof statusConfig]?.label || capitalize(editingTemplate.status)} Notification
                 </h4>
                 
                 <div className="space-y-4">

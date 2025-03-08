@@ -66,21 +66,27 @@ export default function OrdersPage() {
   const [notificationSettings, setNotificationSettings] = useState(defaultNotificationSettings);
   const [settingsTab, setSettingsTab] = useState("hours");
   const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
+  const [orders, setOrders] = useState<Order[]>(mockOrders);
+  
+  // Function to capitalize first letter
+  const capitalize = (str: string) => {
+    return str.charAt(0).toUpperCase() + str.slice(1);
+  };
   
   // Filter orders based on status filter
   const filteredOrders = statusFilter === "all" 
-    ? mockOrders 
-    : mockOrders.filter((order: Order) => order.status === statusFilter);
+    ? orders 
+    : orders.filter((order: Order) => order.status === statusFilter);
 
   // Count orders by status
   const orderCounts = {
-    all: mockOrders.length,
-    new: mockOrders.filter((order: Order) => order.status === "new").length,
-    confirmed: mockOrders.filter((order: Order) => order.status === "confirmed").length,
-    preparing: mockOrders.filter((order: Order) => order.status === "preparing").length,
-    ready: mockOrders.filter((order: Order) => order.status === "ready").length,
-    completed: mockOrders.filter((order: Order) => order.status === "completed").length,
-    cancelled: mockOrders.filter((order: Order) => order.status === "cancelled").length,
+    all: orders.length,
+    new: orders.filter((order: Order) => order.status === "new").length,
+    confirmed: orders.filter((order: Order) => order.status === "confirmed").length,
+    preparing: orders.filter((order: Order) => order.status === "preparing").length,
+    ready: orders.filter((order: Order) => order.status === "ready").length,
+    completed: orders.filter((order: Order) => order.status === "completed").length,
+    cancelled: orders.filter((order: Order) => order.status === "cancelled").length,
   };
 
   // Handle store hours change
@@ -101,6 +107,19 @@ export default function OrdersPage() {
     });
     
     setSettingsDialogOpen(false);
+  };
+  
+  // Handle order status update
+  const handleUpdateOrderStatus = (orderId: string, newStatus: string) => {
+    const updatedOrders = orders.map(order => 
+      order.id === orderId ? { ...order, status: newStatus } : order
+    );
+    setOrders(updatedOrders);
+    
+    // Update selected order if it's the one being modified
+    if (selectedOrder && selectedOrder.id === orderId) {
+      setSelectedOrder({ ...selectedOrder, status: newStatus });
+    }
   };
 
   return (
@@ -224,7 +243,7 @@ export default function OrdersPage() {
                     <SelectItem key={status} value={status} className="flex items-center">
                       <div className="flex items-center gap-2">
                         <StatusIcon className={cn("size-4", config.color)} />
-                        <span>{config.label}</span>
+                        <span>{capitalize(config.label)}</span>
                         <Badge 
                           variant={(statusConfig[status as keyof typeof statusConfig]?.variant || "default") as any}
                           className="ml-auto text-xs"
@@ -254,7 +273,10 @@ export default function OrdersPage() {
       {/* Main Content - Order Details */}
       <div className="flex-1 overflow-auto">
         {selectedOrder ? (
-          <OrderDetails order={selectedOrder} />
+          <OrderDetails 
+            order={selectedOrder} 
+            onUpdateStatus={handleUpdateOrderStatus}
+          />
         ) : (
           <div className="flex h-full flex-col items-center justify-center p-8 text-center">
             <div className="flex max-w-md flex-col items-center">

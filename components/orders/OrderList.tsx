@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { RiTimeLine } from "@remixicon/react";
+import { RiTimeLine, RiUserLine } from "@remixicon/react";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Order, statusConfig } from "@/lib/orders-data";
@@ -12,6 +12,11 @@ interface OrderListProps {
 }
 
 export function OrderList({ orders, selectedOrder, onSelectOrder }: OrderListProps) {
+  // Function to capitalize first letter
+  const capitalize = (str: string) => {
+    return str.charAt(0).toUpperCase() + str.slice(1);
+  };
+  
   if (orders.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center p-8 text-center">
@@ -44,7 +49,7 @@ export function OrderList({ orders, selectedOrder, onSelectOrder }: OrderListPro
                     variant={(statusConfig[order.status as keyof typeof statusConfig]?.variant || "default") as any}
                     className="ml-2 text-xs"
                   >
-                    {order.status}
+                    {capitalize(order.status)}
                   </Badge>
                 </div>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
@@ -55,9 +60,15 @@ export function OrderList({ orders, selectedOrder, onSelectOrder }: OrderListPro
                 ${order.total.toFixed(2)}
               </p>
             </div>
-            <div className="mt-2 flex items-center text-xs text-gray-500 dark:text-gray-400">
-              <RiTimeLine className="mr-1 h-3.5 w-3.5" />
-              {formatDistanceToNow(order.createdAt, { addSuffix: true })}
+            <div className="mt-2 flex items-center justify-between">
+              <div className="flex items-center text-xs text-gray-500 dark:text-gray-400">
+                <RiTimeLine className="mr-1 h-3.5 w-3.5" />
+                {formatDistanceToNow(order.createdAt, { addSuffix: true })}
+              </div>
+              <div className="flex items-center text-xs text-blue-500">
+                <RiUserLine className="mr-1 h-3.5 w-3.5" />
+                {order.agent.name}
+              </div>
             </div>
           </Card>
         ))}

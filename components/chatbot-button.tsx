@@ -1,27 +1,47 @@
 'use client'
 
-import { Icons } from '@/components/icons';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { X } from 'lucide-react';
+import Image from 'next/image';
+import PulsingLogo from './PulsingLogo';
 
 export interface ChatbotButtonComponentProps {
-    textColor: string;
-    backgroundColor: string;
+    textColor?: string;
+    backgroundColor?: string;
+    borderGradient?: boolean;
+    title?: string;
+    message?: string;
+    waveEmoji?: boolean;
+    onToggleChat?: (isOpen: boolean) => void;
+    gradientColors?: string[];
+    logoUrl?: string;
+    chatbotName?: string;
 }
 
-export default function ChatbotButton({ textColor, backgroundColor }: ChatbotButtonComponentProps) {
-    /*
-      <iframe src="http://localhost:3000/embed/cm3g1y5sr0001ctepual1zhpv/window"
-    style="overflow: hidden; height: 80vh; border: 0 none; width: 480px; bottom: -30px;" allowfullscreen
-    allowtransparency></iframe>
-     */
-
+export default function ChatbotButton({ 
+    textColor = "#000000", 
+    backgroundColor = "#FFFFFF",
+    borderGradient = true,
+    title,
+    message = "Hi, let's talk",
+    waveEmoji = true,
+    onToggleChat,
+    gradientColors = ["#2563EB", "#7E22CE", "#F97316"], // Blue, Purple, Orange from the image
+    logoUrl,
+    chatbotName
+}: ChatbotButtonComponentProps) {
     const [isChatVisible, setIsChatVisible] = useState(false);
-    const [animate, setAnimate] = useState(false); // State to trigger animation
+    const [isTransitioning, setIsTransitioning] = useState(false);
+    const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const containerRef = useRef<HTMLDivElement>(null);
+    
+    // Use chatbot name as title if provided, otherwise use default
+    const displayTitle = chatbotName || title || "Link AI Smart Agent";
 
     useEffect(() => {
+        // For compatibility with iframe messaging if still needed
         window.addEventListener('message', function (event) {
             if (event.data === 'openChat') {
-                console.log('Toggle chat visibility');
                 setIsChatVisible(true);
             }
 
@@ -30,33 +50,149 @@ export default function ChatbotButton({ textColor, backgroundColor }: ChatbotBut
             }
         });
 
-        const hasScrollbar = document.body.scrollHeight > document.documentElement.clientHeight;
-        window.parent.postMessage({ type: 'checkScrollbar', hasScrollbar: hasScrollbar }, '*');
+        return () => {
+            window.removeEventListener('message', () => {});
+            if (timeoutRef.current) clearTimeout(timeoutRef.current);
+        };
     }, []);
 
-
     function toggleChatVisibility() {
-        setAnimate(true); // Trigger animation
-        setIsChatVisible(!isChatVisible);
-
-        if (!isChatVisible) {
-            window.parent.postMessage('openChat', '*')
+        setIsTransitioning(true);
+        const newVisibility = !isChatVisible;
+        
+        // Call the callback if provided
+        if (onToggleChat) {
+            onToggleChat(newVisibility);
+        }
+        
+        // For backward compatibility with iframe approach
+        if (newVisibility) {
+            window.parent.postMessage('openChat', '*');
         } else {
-            window.parent.postMessage('closeChat', '*')
+            window.parent.postMessage('closeChat', '*');
         }
 
-        setTimeout(() => {
-            setAnimate(false);
-        }, 300);
+        // Delay the state change to allow for animation
+        timeoutRef.current = setTimeout(() => {
+            setIsChatVisible(newVisibility);
+            timeoutRef.current = setTimeout(() => {
+                setIsTransitioning(false);
+            }, 300);
+        }, 150);
     }
 
+    // Create gradient colors for conic gradient
+    const [color1, color2, color3] = gradientColors;
+
     return (
-        <div className="absolute top-0 left-0 bg-black w-14 h-14 rounded-full cursor-pointer backface-hidden overflow-hidden" style={{ background: backgroundColor }}>
-            <button className={`user-select-none flex items-center justify-center absolute top-0 bottom-0 w-full transition-transform duration-300 ${animate ? 'scale-125' : ''}`}
-                onClick={toggleChatVisibility}>
-                {!isChatVisible && <Icons.message height={24} width={24} style={{ color: textColor }} />}
-                {isChatVisible && <Icons.close style={{ color: textColor }} />}
-            </button>
-        </div >
-    )
+        <div ref={containerRef} className="relative" style={{ height: isChatVisible ? '48px' : 'auto' }}>
+            {/* Chat Button */}
+            <div 
+                className={`
+                    transition-all duration-300 cursor-pointer overflow-hidden
+                    ${isChatVisible ? 'opacity-0 scale-0 absolute pointer-events-none' : 'opacity-100 scale-100'}
+                    ${isTransitioning ? 'transform' : ''}
+                    ${borderGradient ? 'animate-border' : ''}
+                `}
+                style={{ 
+                    maxWidth: '280px',
+                    width: '100%',
+                    borderRadius: '16px',
+                    padding: borderGradient ? '1px' : '0',
+                    background: borderGradient ? 
+                        `conic-gradient(from var(--border-angle), ${color1}, ${color2}, ${color3}, ${color2}, ${color1})` : 'transparent',
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                    transformOrigin: 'right bottom',
+                    position: isChatVisible ? 'absolute' : 'relative',
+                    right: 0,
+                    bottom: 0
+                }}
+                onClick={!isTransitioning ? toggleChatVisibility : undefined}
+            >
+                <div 
+                    className="flex items-center gap-2 px-3 py-2 rounded-[14px]"
+                    style={{ backgroundColor }}
+                >
+                    <div className="w-9 h-9 rounded-full overflow-hidden flex-shrink-0 relative flex items-center justify-center">
+                        {logoUrl ? (
+                            <Image 
+                                src={logoUrl} 
+                                alt={displayTitle}
+                                fill
+                                className="object-cover"
+                            />
+                        ) : (
+                            <PulsingLogo size={36} gradientColors={gradientColors} />
+                        )}
+                    </div>
+                    
+                    <div className="flex flex-col -space-y-1">
+                        <span className="text-[10px] font-normal opacity-70" style={{ color: textColor }}>{displayTitle}</span>
+                        <div className="flex items-center">
+                            <span className="text-lg font-bold" style={{ color: textColor }}>{message}</span>
+                            {waveEmoji && (
+                                <span className="ml-1 text-lg" role="img" aria-label="wave">
+                                    👋
+                                </span>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* X Button */}
+            <div 
+                className={`
+                    transition-all duration-300 cursor-pointer overflow-hidden
+                    ${!isChatVisible ? 'opacity-0 scale-0 absolute pointer-events-none' : 'opacity-100 scale-100'}
+                    ${isTransitioning ? 'transform' : ''}
+                    ${borderGradient ? 'animate-border' : ''}
+                `}
+                style={{ 
+                    width: '48px',
+                    height: '48px',
+                    borderRadius: '50%',
+                    padding: borderGradient ? '1px' : '0',
+                    background: borderGradient ? 
+                        `conic-gradient(from var(--border-angle), ${color1}, ${color2}, ${color3}, ${color2}, ${color1})` : 'transparent',
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                    transformOrigin: 'center',
+                    position: 'absolute',
+                    right: 0,
+                    bottom: 0
+                }}
+                onClick={!isTransitioning ? toggleChatVisibility : undefined}
+            >
+                <div 
+                    className="flex items-center justify-center w-full h-full rounded-full"
+                    style={{ backgroundColor }}
+                >
+                    <X 
+                        size={20} 
+                        color={textColor} 
+                        className={`transition-transform duration-300 ${isTransitioning && !isChatVisible ? 'rotate-90' : 'rotate-0'}`}
+                    />
+                </div>
+            </div>
+
+            {/* CSS for border animation */}
+            <style jsx global>{`
+                @property --border-angle {
+                    syntax: '<angle>';
+                    initial-value: 0deg;
+                    inherits: false;
+                }
+                
+                @keyframes border {
+                    to {
+                        --border-angle: 360deg;
+                    }
+                }
+                
+                .animate-border {
+                    animation: border 4s linear infinite;
+                }
+            `}</style>
+        </div>
+    );
 }

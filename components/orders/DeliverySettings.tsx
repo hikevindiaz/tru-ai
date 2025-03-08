@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/Button";
 import { Divider } from "@/components/Divider";
-import { RiTruckLine, RiStore3Line } from "@remixicon/react";
+import { RiTruckLine, RiStore3Line, RiInformationLine } from "@remixicon/react";
 
 export interface DeliveryMethod {
   id: string;
@@ -30,14 +30,20 @@ export function DeliverySettings({
   const [editingMethod, setEditingMethod] = useState<DeliveryMethod | null>(null);
 
   const handleToggleMethod = (id: string) => {
-    const updatedMethods = deliveryMethods.map(method => 
-      method.id === id ? { ...method, enabled: !method.enabled } : method
-    );
-    onDeliveryMethodsChange(updatedMethods);
+    // Only allow toggling the pickup method, not delivery
+    if (id === "pickup") {
+      const updatedMethods = deliveryMethods.map(method => 
+        method.id === id ? { ...method, enabled: !method.enabled } : method
+      );
+      onDeliveryMethodsChange(updatedMethods);
+    }
   };
 
   const handleEditMethod = (method: DeliveryMethod) => {
-    setEditingMethod({ ...method });
+    // Only allow editing the pickup method
+    if (method.id === "pickup") {
+      setEditingMethod({ ...method });
+    }
   };
 
   const handleSaveMethod = () => {
@@ -65,10 +71,26 @@ export function DeliverySettings({
         <h3 className="text-sm font-medium">Delivery Methods</h3>
       </div>
       
+      <Card className="p-4 bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800">
+        <div className="flex items-start space-x-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/20">
+            <RiInformationLine className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+          </div>
+          <div>
+            <h4 className="text-sm font-medium text-amber-800 dark:text-amber-200">Delivery Currently Disabled</h4>
+            <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
+              Local delivery is currently disabled. Only in-store pickup is available at this time.
+            </p>
+          </div>
+        </div>
+      </Card>
+      
       {deliveryMethods.map((method) => {
         const MethodIcon = method.icon;
+        const isDelivery = method.id === "delivery";
+        
         return (
-          <Card key={method.id} className="p-4">
+          <Card key={method.id} className={`p-4 ${isDelivery ? 'opacity-70' : ''}`}>
             <div className="flex items-start justify-between">
               <div className="flex items-start space-x-3">
                 <div className={`flex h-10 w-10 items-center justify-center rounded-full ${method.enabled ? 'bg-blue-100 dark:bg-blue-900/20' : 'bg-gray-100 dark:bg-gray-800'}`}>
@@ -99,16 +121,19 @@ export function DeliverySettings({
               </div>
               
               <div className="flex items-center space-x-2">
-                <Button 
-                  variant="ghost" 
-                  className="h-8 text-xs"
-                  onClick={() => handleEditMethod(method)}
-                >
-                  Edit
-                </Button>
+                {!isDelivery && (
+                  <Button 
+                    variant="ghost" 
+                    className="h-8 text-xs"
+                    onClick={() => handleEditMethod(method)}
+                  >
+                    Edit
+                  </Button>
+                )}
                 <Switch 
                   checked={method.enabled} 
                   onCheckedChange={() => handleToggleMethod(method.id)} 
+                  disabled={isDelivery}
                 />
               </div>
             </div>
@@ -132,42 +157,6 @@ export function DeliverySettings({
                     onChange={(e) => handleInputChange('name', e.target.value)} 
                   />
                 </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="method-fee">Delivery Fee ($)</Label>
-                  <Input 
-                    id="method-fee" 
-                    type="number" 
-                    min="0" 
-                    step="0.01" 
-                    value={editingMethod.fee || ''} 
-                    onChange={(e) => handleInputChange('fee', parseFloat(e.target.value) || 0)} 
-                  />
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="method-min-amount">Minimum Order Amount ($)</Label>
-                  <Input 
-                    id="method-min-amount" 
-                    type="number" 
-                    min="0" 
-                    step="0.01" 
-                    value={editingMethod.minOrderAmount || ''} 
-                    onChange={(e) => handleInputChange('minOrderAmount', parseFloat(e.target.value) || 0)} 
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="method-time">Estimated Time</Label>
-                  <Input 
-                    id="method-time" 
-                    value={editingMethod.estimatedTime || ''} 
-                    onChange={(e) => handleInputChange('estimatedTime', e.target.value)} 
-                    placeholder="e.g. 30-45 minutes" 
-                  />
-                </div>
               </div>
               
               <div className="space-y-2">
@@ -176,6 +165,16 @@ export function DeliverySettings({
                   id="method-description" 
                   value={editingMethod.description} 
                   onChange={(e) => handleInputChange('description', e.target.value)} 
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="method-time">Estimated Time</Label>
+                <Input 
+                  id="method-time" 
+                  value={editingMethod.estimatedTime || ''} 
+                  onChange={(e) => handleInputChange('estimatedTime', e.target.value)} 
+                  placeholder="e.g. 15-30 minutes" 
                 />
               </div>
               
