@@ -16,6 +16,7 @@ document.addEventListener("DOMContentLoaded", function () {
     var backgroundColor = window.chatbotConfig.backgroundColor || "#FFFFFF";
     var message = window.chatbotConfig.message || "Hi, let's talk";
     var maxButtonWidth = window.chatbotConfig.maxButtonWidth || 320;
+    var minButtonWidth = window.chatbotConfig.minButtonWidth || 180;
     
     // Create container for the widget
     var widgetContainer = document.createElement('div');
@@ -83,33 +84,79 @@ document.addEventListener("DOMContentLoaded", function () {
     // Create simplified conic gradient for border
     var conicGradient = `conic-gradient(from var(--border-angle), ${color1}, ${color2}, ${color3}, ${color2}, ${color1})`;
     
-    // Calculate button width based on message length
-    var displayMessage = message.length > 20 ? message.substring(0, 20) + "..." : message;
-    var estimatedCharWidth = 10; // Approximate width per character in pixels
-    var logoWidth = 36; // Logo width
-    var padding = 24; // Left and right padding
-    var gap = 8; // Gap between logo and text
-    var emojiWidth = 20; // Emoji width
-    var margin = 16; // Extra margin
+    // Calculate button width and determine if text needs truncation
+    function calculateButtonDimensions(fullMessage) {
+      // Create a temporary span to measure text width
+      var tempSpan = document.createElement('span');
+      tempSpan.style.visibility = 'hidden';
+      tempSpan.style.position = 'absolute';
+      tempSpan.style.whiteSpace = 'nowrap';
+      tempSpan.style.fontSize = '1rem';
+      tempSpan.style.fontWeight = 'bold';
+      tempSpan.textContent = fullMessage;
+      document.body.appendChild(tempSpan);
+      
+      var fullTextWidth = tempSpan.offsetWidth;
+      
+      var logoWidth = 36; // Logo width
+      var padding = 24; // Left and right padding
+      var gap = 8; // Gap between logo and text
+      var emojiWidth = 20; // Emoji width
+      var margin = 24; // Extra margin
+      
+      var requiredWidth = fullTextWidth + logoWidth + padding + gap + emojiWidth + margin;
+      var displayedMessage = fullMessage;
+      var calculatedWidth = requiredWidth;
+      
+      // If text is too long, truncate it
+      if (requiredWidth > maxButtonWidth) {
+        var maxChars = fullMessage.length;
+        
+        while (maxChars > 0) {
+          var truncatedMessage = fullMessage.substring(0, maxChars) + "...";
+          tempSpan.textContent = truncatedMessage;
+          
+          var truncatedWidth = tempSpan.offsetWidth;
+          var truncatedRequiredWidth = truncatedWidth + logoWidth + padding + gap + emojiWidth + margin;
+          
+          if (truncatedRequiredWidth <= maxButtonWidth) {
+            displayedMessage = truncatedMessage;
+            calculatedWidth = truncatedRequiredWidth;
+            break;
+          }
+          
+          maxChars--;
+        }
+      }
+      
+      document.body.removeChild(tempSpan);
+      
+      // Ensure button is at least minButtonWidth
+      calculatedWidth = Math.max(Math.min(calculatedWidth, maxButtonWidth), minButtonWidth);
+      
+      return {
+        width: calculatedWidth,
+        displayedMessage: displayedMessage
+      };
+    }
     
-    var calculatedWidth = Math.min(
-      displayMessage.length * estimatedCharWidth + logoWidth + padding + gap + emojiWidth + margin,
-      maxButtonWidth
-    );
+    var buttonDimensions = calculateButtonDimensions(message);
+    var calculatedWidth = buttonDimensions.width;
+    var displayedMessage = buttonDimensions.displayedMessage;
     
     // Create chat button (initial state)
     var chatButton = document.createElement('div');
     chatButton.id = "openassistantgpt-chat-button";
     chatButton.className = "animate-border";
-    chatButton.style = "position: relative; cursor: pointer; width: " + calculatedWidth + "px; max-width: " + maxButtonWidth + "px; border-radius: 16px; padding: 1px; background: " + conicGradient + "; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); transition: all 0.3s ease; transform-origin: right bottom;";
+    chatButton.style = "position: relative; cursor: pointer; width: " + calculatedWidth + "px; min-width: " + minButtonWidth + "px; max-width: " + maxButtonWidth + "px; border-radius: 16px; padding: 1px; background: " + conicGradient + "; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); transition: all 0.3s ease; transform-origin: right bottom;";
     
     // Create button inner
     var chatButtonInner = document.createElement('div');
-    chatButtonInner.style = "display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.75rem; border-radius: 14px; background-color: " + backgroundColor + ";";
+    chatButtonInner.style = "display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.75rem; border-radius: 14px; background-color: " + backgroundColor + "; width: 100%;";
     
     // Create logo container
     var logoContainer = document.createElement('div');
-    logoContainer.style = "width: 2.25rem; height: 2.25rem; border-radius: 9999px; overflow: hidden; position: relative; flex-shrink: 0; display: flex; align-items: center; justify-content: center;";
+    logoContainer.style = "width: 2.25rem; height: 2.25rem; border-radius: 9999px; overflow: hidden; position: relative; flex-shrink: 0; display: flex; align-items: center; justify-center;";
     
     // Add logo image or gradient sphere
     if (logoUrl) {
@@ -137,7 +184,7 @@ document.addEventListener("DOMContentLoaded", function () {
     
     // Create text container
     var textContainer = document.createElement('div');
-    textContainer.style = "display: flex; flex-direction: column; margin-top: -4px; min-width: 0; overflow: hidden;";
+    textContainer.style = "display: flex; flex-direction: column; margin-top: -4px; min-width: 0; flex-grow: 1;";
     
     var title = document.createElement('span');
     title.style = "font-size: 10px; opacity: 0.7; color: " + textColor + "; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;";
@@ -148,7 +195,7 @@ document.addEventListener("DOMContentLoaded", function () {
     
     var messageElement = document.createElement('span');
     messageElement.style = "font-size: 1rem; font-weight: bold; color: " + textColor + "; white-space: nowrap;";
-    messageElement.textContent = displayMessage;
+    messageElement.textContent = displayedMessage;
     
     var emoji = document.createElement('span');
     emoji.style = "margin-left: 0.25rem; font-size: 1rem; flex-shrink: 0;";
