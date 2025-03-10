@@ -1,5 +1,6 @@
 'use client'
 
+import React from 'react';
 import { useState, useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
 import Image from 'next/image';
@@ -122,7 +123,7 @@ export default function ChatbotButton({
                                 className="object-cover"
                             />
                         ) : (
-                            <GradientAgentSphere />
+                            <GradientAgentSphere size={36} gradientColors={gradientColors} />
                         )}
                     </div>
                     
