@@ -7,7 +7,8 @@ document.addEventListener("DOMContentLoaded", function () {
   
       var chatbotId = window.chatbotConfig.chatbotId;
     var apiUrl = window.chatbotConfig.apiUrl || "https://dashboard.getlinkai.com";
-    var gradientColors = window.chatbotConfig.gradientColors || ["#2563EB", "#7E22CE", "#F97316"]; // Blue, Purple, Orange
+    // Use the same default colors as GradientAgentSphere component
+    var gradientColors = window.chatbotConfig.gradientColors || ["#022597", "#000001", "#1a56db"];
     var chatbotName = window.chatbotConfig.chatbotName || "Link AI Smart Agent";
     var logoUrl = window.chatbotConfig.logoUrl || null;
     var textColor = window.chatbotConfig.textColor || "#000000";
@@ -119,21 +120,21 @@ document.addEventListener("DOMContentLoaded", function () {
     
     // Create text container
     var textContainer = document.createElement('div');
-    textContainer.style = "display: flex; flex-direction: column; margin-top: -4px;";
+    textContainer.style = "display: flex; flex-direction: column; margin-top: -4px; min-width: 0; overflow: hidden;";
     
     var title = document.createElement('span');
-    title.style = "font-size: 10px; opacity: 0.7; color: " + textColor + ";";
+    title.style = "font-size: 10px; opacity: 0.7; color: " + textColor + "; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;";
     title.textContent = chatbotName;
     
     var messageContainer = document.createElement('div');
     messageContainer.style = "display: flex; align-items: center; margin-top: -4px;";
     
     var message = document.createElement('span');
-    message.style = "font-size: 1.125rem; font-weight: bold; color: " + textColor + ";";
+    message.style = "font-size: 1rem; font-weight: bold; color: " + textColor + "; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;";
     message.textContent = "Hi, let's talk";
     
     var emoji = document.createElement('span');
-    emoji.style = "margin-left: 0.25rem; font-size: 1.125rem;";
+    emoji.style = "margin-left: 0.25rem; font-size: 1rem; flex-shrink: 0;";
     emoji.textContent = "👋";
     emoji.setAttribute("role", "img");
     emoji.setAttribute("aria-label", "wave");

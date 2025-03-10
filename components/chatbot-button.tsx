@@ -127,12 +127,12 @@ export default function ChatbotButton({
                         )}
                     </div>
                     
-                    <div className="flex flex-col -space-y-1">
-                        <span className="text-[10px] font-normal opacity-70" style={{ color: textColor }}>{displayTitle}</span>
+                    <div className="flex flex-col -space-y-1 min-w-0">
+                        <span className="text-[10px] font-normal opacity-70 truncate" style={{ color: textColor }}>{displayTitle}</span>
                         <div className="flex items-center">
-                            <span className="text-lg font-bold" style={{ color: textColor }}>{message}</span>
+                            <span className="text-base font-bold whitespace-nowrap truncate" style={{ color: textColor }}>{message}</span>
                             {waveEmoji && (
-                                <span className="ml-1 text-lg" role="img" aria-label="wave">
+                                <span className="ml-1 text-base flex-shrink-0" role="img" aria-label="wave">
                                     👋
                                 </span>
                             )}
