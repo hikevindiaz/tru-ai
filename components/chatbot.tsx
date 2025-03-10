@@ -4,7 +4,6 @@ import React from 'react'
 import { Suspense } from 'react'
 import { useSearchParams } from "next/navigation";
 import ChatWidget from './chat-widget';
-import GradientAgentSphere from './gradientagentsphere';
 
 interface ChatbotProps {
   chatbotData?: {
@@ -28,10 +27,18 @@ export default function Chatbot({ chatbotData }: ChatbotProps) {
             return <></>;
         } else {
             return (
-                <div className="flex items-center">
-                    <GradientAgentSphere size={24} className="mr-2" />
-                    <h2 className="text-lg font-semibold">AI Assistant</h2>
-                </div>
+                <ChatWidget 
+                    chatbotId={chatbotId}
+                    chatbotName={chatbotData?.name}
+                    logoUrl={chatbotData?.chatbotLogoURL}
+                    buttonProps={{
+                        textColor: chatbotData?.bubbleTextColor || "#000000",
+                        backgroundColor: chatbotData?.bubbleColor || "#FFFFFF",
+                        borderGradient: true,
+                        message: "Hi, let's talk",
+                        waveEmoji: true
+                    }}
+                />
             );
         }
     }

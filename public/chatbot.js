@@ -34,7 +34,7 @@ document.addEventListener("DOMContentLoaded", function () {
     chatContainer.appendChild(chatIframe);
     widgetContainer.appendChild(chatContainer);
     
-    // Add CSS for conic gradient animation
+    // Add CSS for animations
     var styleElement = document.createElement('style');
     styleElement.textContent = `
       @property --border-angle {
@@ -51,6 +51,16 @@ document.addEventListener("DOMContentLoaded", function () {
       
       .animate-border {
         animation: border 4s linear infinite;
+      }
+      
+      @keyframes profileGradient {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+      }
+      
+      .animate-profileGradient {
+        animation: profileGradient 5s ease infinite;
       }
     `;
     document.head.appendChild(styleElement);
@@ -83,7 +93,7 @@ document.addEventListener("DOMContentLoaded", function () {
     var logoContainer = document.createElement('div');
     logoContainer.style = "width: 2.25rem; height: 2.25rem; border-radius: 9999px; overflow: hidden; position: relative; flex-shrink: 0; display: flex; align-items: center; justify-content: center;";
     
-    // Add logo image or animated gradient
+    // Add logo image or gradient sphere
     if (logoUrl) {
       // Use provided logo
       var logoImg = document.createElement('img');
@@ -92,87 +102,17 @@ document.addEventListener("DOMContentLoaded", function () {
       logoImg.style = "width: 100%; height: 100%; object-fit: cover;";
       logoContainer.appendChild(logoImg);
     } else {
-      // Create animated gradient logo
-      var logoCanvas = document.createElement('canvas');
-      logoCanvas.width = 36;
-      logoCanvas.height = 36;
-      logoCanvas.style = "width: 36px; height: 36px; border-radius: 50%;";
-      logoContainer.appendChild(logoCanvas);
+      // Create gradient agent sphere
+      var gradientSphere = document.createElement('div');
+      gradientSphere.className = "animate-profileGradient";
+      gradientSphere.style = "width: 100%; height: 100%; border-radius: 50%; background-size: 200% 200%; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);";
       
-      // Set up canvas for Stripe-like gradient animation
-      var ctx = logoCanvas.getContext('2d');
-      if (ctx) {
-        var gradientAngle = 0;
-        var size = 36;
-        
-        function animateGradient() {
-          // Clear canvas
-          ctx.clearRect(0, 0, size, size);
-          
-          // Save context state before applying clip
-          ctx.save();
-          
-          // Create a circular clipping path
-          ctx.beginPath();
-          ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
-          ctx.clip();
-          
-          // Calculate gradient positions based on angle
-          var x1 = size / 2 + Math.cos(gradientAngle) * size;
-          var y1 = size / 2 + Math.sin(gradientAngle) * size;
-          var x2 = size / 2 + Math.cos(gradientAngle + Math.PI) * size;
-          var y2 = size / 2 + Math.sin(gradientAngle + Math.PI) * size;
-          
-          // Create gradient
-          var gradient = ctx.createLinearGradient(x1, y1, x2, y2);
-          
-          // Add color stops with extended color array for smoother transitions
-          var extendedColors = gradientColors.concat(gradientColors);
-          var totalColors = extendedColors.length;
-          
-          extendedColors.forEach(function(color, index) {
-            var offset = (index / (totalColors - 1)) % 1;
-            gradient.addColorStop(offset, color);
-          });
-          
-          // Fill background with gradient
-          ctx.fillStyle = gradient;
-          ctx.fillRect(0, 0, size, size);
-          
-          // Add subtle pulsing waves for extra effect
-          var waveCount = 3;
-          var time = Date.now() / 2000; // Slow down the animation
-          
-          for (var i = 0; i < waveCount; i++) {
-            var phase = (time + i / waveCount) % 1;
-            var radius = phase * (size / 2);
-            var opacity = 0.1 * (1 - phase);
-            
-            ctx.beginPath();
-            ctx.arc(size / 2, size / 2, radius, 0, Math.PI * 2);
-            ctx.fillStyle = "rgba(255, 255, 255, " + opacity + ")";
-            ctx.fill();
-          }
-          
-          // Restore context state (removes clipping)
-          ctx.restore();
-          
-          // Draw border to ensure clean edges
-          ctx.beginPath();
-          ctx.arc(size / 2, size / 2, size / 2 - 0.5, 0, Math.PI * 2);
-          ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
-          ctx.lineWidth = 1;
-          ctx.stroke();
-          
-          // Update gradient angle for next frame (slow rotation)
-          gradientAngle += 0.005;
-          
-          requestAnimationFrame(animateGradient);
-        }
-        
-        // Start the animation
-        animateGradient();
-      }
+      // Set gradient colors
+      var gradientDirection = "to bottom right";
+      var gradientColorString = gradientColors.join(', ');
+      gradientSphere.style.backgroundImage = `linear-gradient(${gradientDirection}, ${gradientColorString})`;
+      
+      logoContainer.appendChild(gradientSphere);
     }
     
     chatButtonInner.appendChild(logoContainer);
