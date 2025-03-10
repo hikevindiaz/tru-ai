@@ -10,6 +10,7 @@ export interface ChatbotButtonComponentProps {
     textColor?: string;
     backgroundColor?: string;
     borderGradient?: boolean;
+    borderGradientColors?: string[];
     title?: string;
     message?: string;
     waveEmoji?: boolean;
@@ -17,27 +18,51 @@ export interface ChatbotButtonComponentProps {
     gradientColors?: string[];
     logoUrl?: string;
     chatbotName?: string;
+    maxButtonWidth?: number;
 }
 
 export default function ChatbotButton({ 
     textColor = "#000000", 
     backgroundColor = "#FFFFFF",
     borderGradient = true,
+    borderGradientColors = ["#2563EB", "#7E22CE", "#F97316"], // Blue, Purple, Orange for the border
     title,
     message = "Hi, let's talk",
     waveEmoji = true,
     onToggleChat,
-    gradientColors = ["#2563EB", "#7E22CE", "#F97316"], // Blue, Purple, Orange from the image
+    gradientColors = ["#022597", "#000001", "#1a56db"], // Default colors for the sphere
     logoUrl,
-    chatbotName
+    chatbotName,
+    maxButtonWidth = 320
 }: ChatbotButtonComponentProps) {
     const [isChatVisible, setIsChatVisible] = useState(false);
     const [isTransitioning, setIsTransitioning] = useState(false);
     const timeoutRef = useRef<NodeJS.Timeout | null>(null);
     const containerRef = useRef<HTMLDivElement>(null);
+    const messageRef = useRef<HTMLSpanElement>(null);
+    const [buttonWidth, setButtonWidth] = useState<number | undefined>(undefined);
     
     // Use chatbot name as title if provided, otherwise use default
     const displayTitle = chatbotName || title || "Link AI Smart Agent";
+
+    // Calculate button width based on text content
+    useEffect(() => {
+        if (messageRef.current) {
+            const textWidth = messageRef.current.scrollWidth;
+            const logoWidth = 36; // w-9 = 36px
+            const padding = 24; // px-3 = 12px * 2
+            const gap = 8; // gap-2 = 8px
+            const emojiWidth = waveEmoji ? 20 : 0; // Approximate width of emoji
+            const margin = 16; // Extra margin for safety
+            
+            const calculatedWidth = Math.min(
+                textWidth + logoWidth + padding + gap + emojiWidth + margin,
+                maxButtonWidth
+            );
+            
+            setButtonWidth(calculatedWidth);
+        }
+    }, [message, waveEmoji, maxButtonWidth]);
 
     useEffect(() => {
         // For compatibility with iframe messaging if still needed
@@ -82,8 +107,8 @@ export default function ChatbotButton({
         }, 150);
     }
 
-    // Create gradient colors for conic gradient
-    const [color1, color2, color3] = gradientColors;
+    // Create gradient colors for conic gradient (border)
+    const [color1, color2, color3] = borderGradientColors;
 
     return (
         <div ref={containerRef} className="relative" style={{ height: isChatVisible ? '48px' : 'auto' }}>
@@ -96,8 +121,8 @@ export default function ChatbotButton({
                     ${borderGradient ? 'animate-border' : ''}
                 `}
                 style={{ 
-                    maxWidth: '280px',
-                    width: '100%',
+                    width: buttonWidth ? `${buttonWidth}px` : 'auto',
+                    maxWidth: `${maxButtonWidth}px`,
                     borderRadius: '16px',
                     padding: borderGradient ? '1px' : '0',
                     background: borderGradient ? 
@@ -130,7 +155,13 @@ export default function ChatbotButton({
                     <div className="flex flex-col -space-y-1 min-w-0">
                         <span className="text-[10px] font-normal opacity-70 truncate" style={{ color: textColor }}>{displayTitle}</span>
                         <div className="flex items-center">
-                            <span className="text-base font-bold whitespace-nowrap truncate" style={{ color: textColor }}>{message}</span>
+                            <span 
+                                ref={messageRef} 
+                                className="text-base font-bold whitespace-nowrap" 
+                                style={{ color: textColor }}
+                            >
+                                {message.length > 20 ? `${message.substring(0, 20)}...` : message}
+                            </span>
                             {waveEmoji && (
                                 <span className="ml-1 text-base flex-shrink-0" role="img" aria-label="wave">
                                     👋

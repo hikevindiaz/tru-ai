@@ -11,10 +11,12 @@ interface ChatWidgetProps {
     textColor?: string;
     backgroundColor?: string;
     borderGradient?: boolean;
+    borderGradientColors?: string[];
     title?: string;
     message?: string;
     waveEmoji?: boolean;
     gradientColors?: string[];
+    maxButtonWidth?: number;
   };
 }
 
@@ -57,6 +59,7 @@ export default function ChatWidget({
           textColor={buttonProps.textColor}
           backgroundColor={buttonProps.backgroundColor}
           borderGradient={buttonProps.borderGradient}
+          borderGradientColors={buttonProps.borderGradientColors}
           title={buttonProps.title}
           message={buttonProps.message}
           waveEmoji={buttonProps.waveEmoji}
@@ -64,6 +67,7 @@ export default function ChatWidget({
           gradientColors={buttonProps.gradientColors}
           logoUrl={logoUrl}
           chatbotName={chatbotName}
+          maxButtonWidth={buttonProps.maxButtonWidth}
         />
       </div>
     </div>

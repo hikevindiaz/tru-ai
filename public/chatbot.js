@@ -7,12 +7,15 @@ document.addEventListener("DOMContentLoaded", function () {
   
       var chatbotId = window.chatbotConfig.chatbotId;
     var apiUrl = window.chatbotConfig.apiUrl || "https://dashboard.getlinkai.com";
-    // Use the same default colors as GradientAgentSphere component
-    var gradientColors = window.chatbotConfig.gradientColors || ["#022597", "#000001", "#1a56db"];
+    // Separate gradient colors for sphere and border
+    var sphereGradientColors = window.chatbotConfig.sphereGradientColors || ["#022597", "#000001", "#1a56db"]; // For the sphere
+    var borderGradientColors = window.chatbotConfig.borderGradientColors || ["#2563EB", "#7E22CE", "#F97316"]; // For the border
     var chatbotName = window.chatbotConfig.chatbotName || "Link AI Smart Agent";
     var logoUrl = window.chatbotConfig.logoUrl || null;
     var textColor = window.chatbotConfig.textColor || "#000000";
     var backgroundColor = window.chatbotConfig.backgroundColor || "#FFFFFF";
+    var message = window.chatbotConfig.message || "Hi, let's talk";
+    var maxButtonWidth = window.chatbotConfig.maxButtonWidth || 320;
     
     // Create container for the widget
     var widgetContainer = document.createElement('div');
@@ -72,19 +75,33 @@ document.addEventListener("DOMContentLoaded", function () {
     buttonWrapper.style = "position: relative; margin-right: 0.75rem; margin-bottom: 0.75rem;";
     widgetContainer.appendChild(buttonWrapper);
     
-    // Extract colors for conic gradient
-    var color1 = gradientColors[0];
-    var color2 = gradientColors[1];
-    var color3 = gradientColors[2];
+    // Extract colors for conic gradient (border)
+    var color1 = borderGradientColors[0];
+    var color2 = borderGradientColors[1];
+    var color3 = borderGradientColors[2];
     
-    // Create simplified conic gradient
+    // Create simplified conic gradient for border
     var conicGradient = `conic-gradient(from var(--border-angle), ${color1}, ${color2}, ${color3}, ${color2}, ${color1})`;
+    
+    // Calculate button width based on message length
+    var displayMessage = message.length > 20 ? message.substring(0, 20) + "..." : message;
+    var estimatedCharWidth = 10; // Approximate width per character in pixels
+    var logoWidth = 36; // Logo width
+    var padding = 24; // Left and right padding
+    var gap = 8; // Gap between logo and text
+    var emojiWidth = 20; // Emoji width
+    var margin = 16; // Extra margin
+    
+    var calculatedWidth = Math.min(
+      displayMessage.length * estimatedCharWidth + logoWidth + padding + gap + emojiWidth + margin,
+      maxButtonWidth
+    );
     
     // Create chat button (initial state)
     var chatButton = document.createElement('div');
     chatButton.id = "openassistantgpt-chat-button";
     chatButton.className = "animate-border";
-    chatButton.style = "position: relative; cursor: pointer; max-width: 280px; width: 100%; border-radius: 16px; padding: 1px; background: " + conicGradient + "; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); transition: all 0.3s ease; transform-origin: right bottom;";
+    chatButton.style = "position: relative; cursor: pointer; width: " + calculatedWidth + "px; max-width: " + maxButtonWidth + "px; border-radius: 16px; padding: 1px; background: " + conicGradient + "; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); transition: all 0.3s ease; transform-origin: right bottom;";
     
     // Create button inner
     var chatButtonInner = document.createElement('div');
@@ -103,15 +120,15 @@ document.addEventListener("DOMContentLoaded", function () {
       logoImg.style = "width: 100%; height: 100%; object-fit: cover;";
       logoContainer.appendChild(logoImg);
     } else {
-      // Create gradient agent sphere
+      // Create gradient agent sphere with sphere colors
       var gradientSphere = document.createElement('div');
       gradientSphere.className = "animate-profileGradient";
       gradientSphere.style = "width: 100%; height: 100%; border-radius: 50%; background-size: 200% 200%; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);";
       
-      // Set gradient colors
+      // Set gradient colors for the sphere
       var gradientDirection = "to bottom right";
-      var gradientColorString = gradientColors.join(', ');
-      gradientSphere.style.backgroundImage = `linear-gradient(${gradientDirection}, ${gradientColorString})`;
+      var sphereGradientString = sphereGradientColors.join(', ');
+      gradientSphere.style.backgroundImage = `linear-gradient(${gradientDirection}, ${sphereGradientString})`;
       
       logoContainer.appendChild(gradientSphere);
     }
@@ -129,9 +146,9 @@ document.addEventListener("DOMContentLoaded", function () {
     var messageContainer = document.createElement('div');
     messageContainer.style = "display: flex; align-items: center; margin-top: -4px;";
     
-    var message = document.createElement('span');
-    message.style = "font-size: 1rem; font-weight: bold; color: " + textColor + "; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;";
-    message.textContent = "Hi, let's talk";
+    var messageElement = document.createElement('span');
+    messageElement.style = "font-size: 1rem; font-weight: bold; color: " + textColor + "; white-space: nowrap;";
+    messageElement.textContent = displayMessage;
     
     var emoji = document.createElement('span');
     emoji.style = "margin-left: 0.25rem; font-size: 1rem; flex-shrink: 0;";
@@ -139,7 +156,7 @@ document.addEventListener("DOMContentLoaded", function () {
     emoji.setAttribute("role", "img");
     emoji.setAttribute("aria-label", "wave");
     
-    messageContainer.appendChild(message);
+    messageContainer.appendChild(messageElement);
     messageContainer.appendChild(emoji);
     
     textContainer.appendChild(title);
