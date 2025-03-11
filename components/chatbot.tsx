@@ -21,7 +21,7 @@ export default function Chatbot({ chatbotData }: ChatbotProps) {
         const chatboxParam = params?.get('chatbox') || '';
 
         // Use the chatbot ID from props or fallback to the default
-        const chatbotId = chatbotData?.id || "cm3g1y5sr0001ctepual1zhpv";
+        const chatbotId = chatbotData?.id || "cm8415rzb000kndfuiaxdjqle";
         
         if (chatboxParam.match('false')) {
             return <></>;

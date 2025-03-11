@@ -34,14 +34,40 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { AgentSettings } from "@/components/agents/agent-settings";
+import type { Agent } from "@/types/agent";
+import { CheckCircle2, Loader2, AlertCircle } from "lucide-react";
 
-interface Agent {
+// Define a simplified agent type for the list view
+interface SimpleAgent {
   id: string;
   name: string;
   status: 'draft' | 'live';
   userId: string;
   createdAt: Date;
   updatedAt: Date;
+}
+
+// Function to convert database chatbot to Agent type
+function convertToAgent(chatbot: any): Agent {
+  return {
+    id: chatbot.id,
+    name: chatbot.name,
+    status: chatbot.isLive ? 'live' : 'draft',
+    userId: chatbot.userId,
+    createdAt: new Date(chatbot.createdAt),
+    updatedAt: new Date(chatbot.updatedAt),
+    welcomeMessage: chatbot.welcomeMessage || "Hello! How can I help you today?",
+    prompt: chatbot.prompt || "You are a helpful assistant.",
+    errorMessage: chatbot.chatbotErrorMessage || "I'm sorry, I encountered an error. Please try again.",
+    language: chatbot.language || "en",
+    secondLanguage: chatbot.secondLanguage || "none",
+    openaiId: chatbot.openaiId,
+    modelId: chatbot.modelId,
+    model: chatbot.model ? {
+      id: chatbot.model.id,
+      name: chatbot.model.name,
+    } : undefined,
+  };
 }
 
 const colorCombinations = [
@@ -66,36 +92,40 @@ const getInitials = (name: string) => {
 export default function TestChatbotPage() {
   const { data: session } = useSession();
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
-  const [agents, setAgents] = useState<Agent[]>([]);
+  const [agents, setAgents] = useState<SimpleAgent[]>([]);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [agentToDelete, setAgentToDelete] = useState<Agent | null>(null);
+  const [agentToDelete, setAgentToDelete] = useState<SimpleAgent | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+  const [deleteStatus, setDeleteStatus] = useState<'idle' | 'deleting' | 'success' | 'error'>('idle');
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchAgents = async () => {
-      if (!session?.user?.id) return;
-      
-      try {
-        setIsLoading(true);
-        const response = await fetch('/api/chatbots');
-        if (!response.ok) throw new Error('Failed to fetch agents');
-        
-        const data = await response.json();
-        setAgents(data);
-      } catch (error) {
-        console.error('Error fetching agents:', error);
-        toast.error("Failed to load agents");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     fetchAgents();
   }, [session?.user?.id]);
 
+  const fetchAgents = async () => {
+    if (!session?.user?.id) return;
+    
+    try {
+      setIsLoading(true);
+      const response = await fetch('/api/chatbots');
+      if (!response.ok) throw new Error('Failed to fetch agents');
+      
+      const data = await response.json();
+      setAgents(data);
+    } catch (error) {
+      console.error('Error fetching agents:', error);
+      toast.error("Failed to load agents");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleCreateAgent = async (name: string, templateId: string) => {
     try {
+      setIsCreating(true);
       const response = await fetch('/api/chatbots', {
         method: 'POST',
         headers: {
@@ -103,48 +133,88 @@ export default function TestChatbotPage() {
         },
         body: JSON.stringify({
           name,
-          templateId,
+          prompt: 'You are a helpful assistant.',
+          welcomeMessage: 'Hello! How can I help you today?',
+          chatbotErrorMessage: "I'm sorry, I encountered an error. Please try again.",
         }),
       });
 
-      if (!response.ok) throw new Error('Failed to create agent');
+      if (!response.ok) {
+        throw new Error('Failed to create agent');
+      }
 
       const newAgent = await response.json();
-      setAgents(prev => [...prev, newAgent]);
-      toast.success("Agent created successfully");
+      toast.success('Agent created successfully');
+      
+      // Refresh the agent list
+      fetchAgents();
+      
+      // Close the drawer
       setIsDrawerOpen(false);
     } catch (error) {
       console.error('Error creating agent:', error);
-      toast.error("Failed to create agent");
+      toast.error('Failed to create agent');
+    } finally {
+      setIsCreating(false);
     }
   };
 
-  const handleDeleteAgent = async () => {
-    if (!agentToDelete) return;
-    
+  const handleDeleteAgent = async (id: string) => {
     setIsDeleting(true);
+    setDeleteStatus('deleting');
+    setDeleteError(null);
     
     try {
-      const response = await fetch(`/api/chatbots/${agentToDelete.id}`, {
+      const response = await fetch(`/api/chatbots/${id}`, {
         method: 'DELETE',
       });
-      
-      if (!response.ok) throw new Error('Failed to delete agent');
-      
-      setAgents(prev => prev.filter(agent => agent.id !== agentToDelete.id));
-      
-      // If the deleted agent was selected, clear the selection
-      if (selectedAgent?.id === agentToDelete.id) {
-        setSelectedAgent(null);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `Failed to delete agent (${response.status})`);
       }
+
+      // Remove the agent from the list
+      setAgents(agents.filter(agent => agent.id !== id));
+      setSelectedAgent(null);
       
-      toast.success("Agent deleted successfully");
+      // Set success status
+      setDeleteStatus('success');
+      
+      // Close the dialog after a short delay to show success message
+      setTimeout(() => {
+        setAgentToDelete(null);
+        setDeleteStatus('idle');
+        toast.success('Agent deleted successfully');
+      }, 1500);
     } catch (error) {
       console.error('Error deleting agent:', error);
-      toast.error("Failed to delete agent");
+      setDeleteStatus('error');
+      setDeleteError(error instanceof Error ? error.message : 'Failed to delete agent');
+      toast.error('Failed to delete agent');
     } finally {
       setIsDeleting(false);
-      setAgentToDelete(null);
+    }
+  };
+
+  const fetchAgentDetails = async (agentId: string) => {
+    try {
+      const response = await fetch(`/api/chatbots/${agentId}`);
+      if (!response.ok) throw new Error('Failed to fetch agent details');
+      
+      const data = await response.json();
+      return convertToAgent(data);
+    } catch (error) {
+      console.error('Error fetching agent details:', error);
+      toast.error("Failed to load agent details");
+      return null;
+    }
+  };
+
+  const handleAgentSelect = async (agent: SimpleAgent) => {
+    const agentDetails = await fetchAgentDetails(agent.id);
+    if (agentDetails) {
+      setSelectedAgent(agentDetails);
     }
   };
 
@@ -216,7 +286,7 @@ export default function TestChatbotPage() {
                           selectedAgent?.id === agent.id && "text-blue-600 dark:text-blue-400"
                         )}>
                           <button 
-                            onClick={() => setSelectedAgent(agent)}
+                            onClick={() => handleAgentSelect(agent)}
                             className="focus:outline-none hover:no-underline no-underline"
                             type="button"
                           >
@@ -338,6 +408,12 @@ export default function TestChatbotPage() {
                 if (!response.ok) throw new Error('Failed to update agent');
                 
                 toast.success("Settings saved successfully");
+                
+                // Refresh agent details
+                const updatedAgent = await fetchAgentDetails(selectedAgent.id);
+                if (updatedAgent) {
+                  setSelectedAgent(updatedAgent);
+                }
               } catch (error) {
                 console.error('Error updating agent:', error);
                 toast.error("Failed to save settings");
@@ -370,7 +446,14 @@ export default function TestChatbotPage() {
       </div>
 
       {/* Delete Confirmation Dialog */}
-      <Dialog open={!!agentToDelete} onOpenChange={(open) => !open && setAgentToDelete(null)}>
+      <Dialog open={!!agentToDelete} onOpenChange={(open) => {
+        // Only allow closing if not in the middle of deleting
+        if (!open && deleteStatus !== 'deleting') {
+          setAgentToDelete(null);
+          setDeleteStatus('idle');
+          setDeleteError(null);
+        }
+      }}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Delete Agent</DialogTitle>
@@ -378,12 +461,36 @@ export default function TestChatbotPage() {
               Are you sure you want to delete this agent? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
+          
+          {deleteStatus === 'success' && (
+            <div className="my-4 p-3 bg-green-50 border border-green-200 rounded-md text-green-800 dark:bg-green-900/20 dark:border-green-800 dark:text-green-400">
+              <div className="flex items-center">
+                <CheckCircle2 className="h-5 w-5 mr-2" />
+                <span>Agent deleted successfully!</span>
+              </div>
+            </div>
+          )}
+          
+          {deleteStatus === 'error' && (
+            <div className="my-4 p-3 bg-red-50 border border-red-200 rounded-md text-red-800 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
+              <div className="flex items-center">
+                <AlertCircle className="h-5 w-5 mr-2" />
+                <span>{deleteError || 'Failed to delete agent. Please try again.'}</span>
+              </div>
+            </div>
+          )}
+          
           <DialogFooter className="mt-6">
             <DialogClose asChild>
               <Button
                 variant="secondary"
                 className="mt-2 w-full sm:mt-0 sm:w-fit"
-                onClick={() => setAgentToDelete(null)}
+                onClick={() => {
+                  setAgentToDelete(null);
+                  setDeleteStatus('idle');
+                  setDeleteError(null);
+                }}
+                disabled={deleteStatus === 'deleting'}
               >
                 Cancel
               </Button>
@@ -391,10 +498,22 @@ export default function TestChatbotPage() {
             <Button 
               variant="destructive"
               className="w-full sm:w-fit"
-              onClick={handleDeleteAgent}
-              disabled={isDeleting}
+              onClick={() => handleDeleteAgent(agentToDelete?.id || '')}
+              disabled={deleteStatus !== 'idle' && deleteStatus !== 'error'}
             >
-              {isDeleting ? 'Deleting...' : 'Delete Agent'}
+              {deleteStatus === 'deleting' ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : deleteStatus === 'success' ? (
+                <>
+                  <CheckCircle2 className="mr-2 h-4 w-4" />
+                  Deleted
+                </>
+              ) : (
+                'Delete Agent'
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>

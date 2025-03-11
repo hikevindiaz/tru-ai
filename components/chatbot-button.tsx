@@ -5,6 +5,8 @@ import { useState, useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
 import Image from 'next/image';
 import GradientAgentSphere from './gradientagentsphere';
+import ChatOptionsDialog from './chat-options-dialog';
+import VoiceChatInterface from './voice-chat-interface';
 
 export interface ChatbotButtonComponentProps {
     textColor?: string;
@@ -14,12 +16,14 @@ export interface ChatbotButtonComponentProps {
     title?: string;
     message?: string;
     waveEmoji?: boolean;
-    onToggleChat?: (isOpen: boolean) => void;
+    onToggleChat?: (isOpen: boolean, chatType?: 'text' | 'voice') => void;
     gradientColors?: string[];
     logoUrl?: string;
     chatbotName?: string;
     maxButtonWidth?: number;
     minButtonWidth?: number;
+    termsUrl?: string;
+    privacyUrl?: string;
 }
 
 export default function ChatbotButton({ 
@@ -35,9 +39,13 @@ export default function ChatbotButton({
     logoUrl,
     chatbotName,
     maxButtonWidth = 320,
-    minButtonWidth = 180
+    minButtonWidth = 180,
+    termsUrl = "https://getlinkai.com/terms",
+    privacyUrl = "https://getlinkai.com/privacy"
 }: ChatbotButtonComponentProps) {
     const [isChatVisible, setIsChatVisible] = useState(false);
+    const [isOptionsVisible, setIsOptionsVisible] = useState(false);
+    const [isVoiceChatVisible, setIsVoiceChatVisible] = useState(false);
     const [isTransitioning, setIsTransitioning] = useState(false);
     const timeoutRef = useRef<NodeJS.Timeout | null>(null);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -106,57 +114,133 @@ export default function ChatbotButton({
 
     useEffect(() => {
         // For compatibility with iframe messaging if still needed
-        window.addEventListener('message', function (event) {
+        const handleMessage = (event: MessageEvent) => {
             if (event.data === 'openChat') {
-                setIsChatVisible(true);
+                // Don't automatically set chat visible, wait for user selection
+                setIsOptionsVisible(true);
             }
 
             if (event.data === 'closeChat') {
-                setIsChatVisible(false);
+                closeAllInterfaces();
             }
-        });
+        };
+
+        window.addEventListener('message', handleMessage);
 
         return () => {
-            window.removeEventListener('message', () => {});
+            window.removeEventListener('message', handleMessage);
             if (timeoutRef.current) clearTimeout(timeoutRef.current);
         };
     }, []);
 
     function toggleChatVisibility() {
+        console.log("Toggle chat visibility, current states:", { 
+            isChatVisible, 
+            isOptionsVisible, 
+            isVoiceChatVisible, 
+            isTransitioning 
+        });
+        
+        if (isTransitioning) {
+            console.log("Ignoring click during transition");
+            return;
+        }
+        
         setIsTransitioning(true);
-        const newVisibility = !isChatVisible;
+        
+        if (isChatVisible || isOptionsVisible || isVoiceChatVisible) {
+            // Close everything
+            closeAllInterfaces();
+        } else {
+            // Show options dialog
+            showOptionsDialog();
+        }
+    }
+    
+    function showOptionsDialog() {
+        console.log("Showing options dialog");
+        setIsOptionsVisible(true);
+        
+        // Call the callback if provided, but don't specify chat type yet
+        if (onToggleChat) {
+            onToggleChat(true);
+        }
+        
+        timeoutRef.current = setTimeout(() => {
+            setIsTransitioning(false);
+        }, 300);
+    }
+    
+    function closeAllInterfaces() {
+        console.log("Closing all interfaces");
+        setIsOptionsVisible(false);
+        setIsVoiceChatVisible(false);
         
         // Call the callback if provided
         if (onToggleChat) {
-            onToggleChat(newVisibility);
+            onToggleChat(false);
         }
         
         // For backward compatibility with iframe approach
-        if (newVisibility) {
-            window.parent.postMessage('openChat', '*');
-        } else {
-            window.parent.postMessage('closeChat', '*');
-        }
-
+        window.parent.postMessage('closeChat', '*');
+        
         // Delay the state change to allow for animation
         timeoutRef.current = setTimeout(() => {
-            setIsChatVisible(newVisibility);
+            setIsChatVisible(false);
             timeoutRef.current = setTimeout(() => {
                 setIsTransitioning(false);
             }, 300);
         }, 150);
+    }
+    
+    function handleOptionSelect(option: 'text' | 'voice') {
+        console.log("Option selected:", option);
+        // Immediately hide the options dialog to prevent it from showing again
+        setIsOptionsVisible(false);
+        
+        if (option === 'text') {
+            // Open text chat
+            setIsChatVisible(true);
+            
+            // Call the callback with the chat type
+            if (onToggleChat) {
+                onToggleChat(true, 'text');
+            }
+            
+            // Now send the message to open the chat iframe
+            window.parent.postMessage('openChat', '*');
+        } else {
+            // Open voice chat
+            setIsVoiceChatVisible(true);
+            
+            // Call the callback with the chat type
+            if (onToggleChat) {
+                onToggleChat(true, 'voice');
+            }
+        }
+    }
+    
+    function handleVoiceChatClose() {
+        console.log("Voice chat closed");
+        setIsVoiceChatVisible(false);
+        setIsTransitioning(false);
+        
+        // Call the callback if provided
+        if (onToggleChat) {
+            onToggleChat(false);
+        }
     }
 
     // Create gradient colors for conic gradient (border)
     const [color1, color2, color3] = borderGradientColors;
 
     return (
-        <div ref={containerRef} className="relative" style={{ height: isChatVisible ? '48px' : 'auto' }}>
+        <div ref={containerRef} className="relative" style={{ height: (isChatVisible || isOptionsVisible || isVoiceChatVisible) ? '48px' : 'auto' }}>
             {/* Chat Button */}
             <div 
                 className={`
                     transition-all duration-300 cursor-pointer overflow-hidden
-                    ${isChatVisible ? 'opacity-0 scale-0 absolute pointer-events-none' : 'opacity-100 scale-100'}
+                    ${(isChatVisible || isOptionsVisible || isVoiceChatVisible) ? 'opacity-0 scale-0 absolute pointer-events-none' : 'opacity-100 scale-100'}
                     ${isTransitioning ? 'transform' : ''}
                     ${borderGradient ? 'animate-border' : ''}
                 `}
@@ -170,7 +254,7 @@ export default function ChatbotButton({
                         `conic-gradient(from var(--border-angle), ${color1}, ${color2}, ${color3}, ${color2}, ${color1})` : 'transparent',
                     boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
                     transformOrigin: 'right bottom',
-                    position: isChatVisible ? 'absolute' : 'relative',
+                    position: (isChatVisible || isOptionsVisible || isVoiceChatVisible) ? 'absolute' : 'relative',
                     right: 0,
                     bottom: 0
                 }}
@@ -217,7 +301,7 @@ export default function ChatbotButton({
             <div 
                 className={`
                     transition-all duration-300 cursor-pointer overflow-hidden
-                    ${!isChatVisible ? 'opacity-0 scale-0 absolute pointer-events-none' : 'opacity-100 scale-100'}
+                    ${!(isChatVisible || isOptionsVisible || isVoiceChatVisible) ? 'opacity-0 scale-0 absolute pointer-events-none' : 'opacity-100 scale-100'}
                     ${isTransitioning ? 'transform' : ''}
                     ${borderGradient ? 'animate-border' : ''}
                 `}
@@ -232,7 +316,8 @@ export default function ChatbotButton({
                     transformOrigin: 'center',
                     position: 'absolute',
                     right: 0,
-                    bottom: 0
+                    bottom: 0,
+                    zIndex: 60 // Ensure it's above other elements
                 }}
                 onClick={!isTransitioning ? toggleChatVisibility : undefined}
             >
@@ -243,10 +328,36 @@ export default function ChatbotButton({
                     <X 
                         size={20} 
                         color={textColor} 
-                        className={`transition-transform duration-300 ${isTransitioning && !isChatVisible ? 'rotate-90' : 'rotate-0'}`}
+                        className={`transition-transform duration-300 ${isTransitioning && !(isChatVisible || isOptionsVisible || isVoiceChatVisible) ? 'rotate-90' : 'rotate-0'}`}
                     />
                 </div>
             </div>
+            
+            {/* Options Dialog */}
+            {isOptionsVisible && (
+                <ChatOptionsDialog 
+                    onClose={closeAllInterfaces}
+                    onSelectOption={handleOptionSelect}
+                    textColor={textColor === "#000000" ? "#FFFFFF" : textColor}
+                    backgroundColor={backgroundColor === "#FFFFFF" ? "#000000" : backgroundColor}
+                    borderGradientColors={borderGradientColors}
+                    gradientColors={gradientColors}
+                    termsUrl={termsUrl}
+                    privacyUrl={privacyUrl}
+                />
+            )}
+            
+            {/* Voice Chat Interface */}
+            {isVoiceChatVisible && (
+                <VoiceChatInterface 
+                    onClose={handleVoiceChatClose}
+                    textColor={textColor === "#000000" ? "#FFFFFF" : textColor}
+                    backgroundColor={backgroundColor === "#FFFFFF" ? "#000000" : backgroundColor}
+                    borderGradientColors={borderGradientColors}
+                    gradientColors={gradientColors}
+                    chatbotName={displayTitle}
+                />
+            )}
 
             {/* CSS for border animation */}
             <style jsx global>{`
@@ -264,6 +375,21 @@ export default function ChatbotButton({
                 
                 .animate-border {
                     animation: border 4s linear infinite;
+                }
+                
+                @keyframes slideUpFade {
+                    from {
+                        opacity: 0;
+                        transform: translateY(20px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
+                }
+                
+                .animate-slideUpFade {
+                    animation: slideUpFade 0.3s ease-out forwards;
                 }
             `}</style>
         </div>

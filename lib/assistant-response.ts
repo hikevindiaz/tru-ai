@@ -16,6 +16,11 @@ type AssistantResponseSettings = {
   The ID of the latest message that the response is associated with.
    */
     messageId: string;
+
+    /**
+  The ID of the chatbot that the response is associated with.
+   */
+    chatbotId: string;
 };
 
 /**
@@ -100,52 +105,64 @@ export function AssistantResponse(
                         case 'thread.message.delta': {
                             const content = value.data.delta.content?.[0];
                             if (content?.type === 'text' && content.text?.value != null) {
-
                                 controller.enqueue(
                                     textEncoder.encode(
                                         formatStreamPart('text', content.text.value),
                                     ),
                                 );
                             }
-
                             break;
                         }
 
                         case 'thread.message.completed': {
-                            value.data.content.map((content) => {
-                                if (content.text && content.text.annotations) {
-                                    // for all anoatition add url to object file path
-                                    content.text.annotations.map((annotation) => {
+                            value.data.content.forEach((content) => {
+                                if (content.type === 'text' && content.text && content.text.annotations) {
+                                    // For all annotations add url to object file path
+                                    const processedAnnotations = content.text.annotations.map((annotation) => {
                                         if (annotation.type === 'file_path') {
-                                            annotation.file_path = {
-                                                file_id: annotation.file_path.file_id,
-                                                url: `/api/chatbots/${chatbotId}/chat/file/${annotation.file_path.file_id}`,
-                                            }
+                                            // Create a new object with the properties we need
+                                            return {
+                                                type: annotation.type,
+                                                text: annotation.text,
+                                                start_index: annotation.start_index,
+                                                end_index: annotation.end_index,
+                                                file_path: {
+                                                    file_id: annotation.file_path.file_id,
+                                                    file_url: `/api/chatbots/${chatbotId}/chat/file/${annotation.file_path.file_id}`,
+                                                }
+                                            };
                                         }
-                                    })
+                                        return annotation;
+                                    });
 
                                     controller.enqueue(
                                         textEncoder.encode(
-                                            formatStreamPart('message_annotations', content.text.annotations),
+                                            formatStreamPart('message_annotations', JSON.parse(JSON.stringify(processedAnnotations))),
                                         ),
                                     );
                                 }
 
-
-                                if (content.type == 'image_file') {
-                                    console.log(content.image_file)
+                                if (content.type === 'image_file') {
+                                    console.log("Image file received:", content.image_file);
                                     controller.enqueue(
                                         textEncoder.encode(
                                             formatStreamPart('assistant_message', {
                                                 id: value.data.id,
                                                 role: 'assistant',
-                                                content: [{ type: 'text', text: { value: `![${content.image_file.file_id}](/api/chatbots/${chatbotId}/chat/file/${content.image_file.file_id})\n` } }],
+                                                content: [{ 
+                                                    type: 'text', 
+                                                    text: { 
+                                                        value: `![${content.image_file.file_id}](/api/chatbots/${chatbotId}/chat/file/${content.image_file.file_id})\n` 
+                                                    } 
+                                                }],
                                             }),
                                         ),
                                     );
                                 }
-                            })
+                            });
+                            break;
                         }
+
                         case 'thread.run.completed':
                         case 'thread.run.requires_action': {
                             result = value.data;
@@ -176,6 +193,7 @@ export function AssistantResponse(
                     forwardStream,
                 });
             } catch (error) {
+                console.error("Error in AssistantResponse:", error);
                 sendError((error as any).message ?? `${error}`);
             } finally {
                 controller.close();

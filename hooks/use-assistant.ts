@@ -1,308 +1,257 @@
-import { isAbortError } from '@ai-sdk/provider-utils';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { generateId } from '@/lib/generate-id';
-import { readDataStream } from '@/lib/read-data-stream';
-import {
-  AssistantStatus,
-  CreateMessage,
-  Message,
-} from 'ai';
+import { useCallback, useEffect, useState } from 'react'
+import { useChat, Message } from 'ai/react'
+import { nanoid } from 'nanoid'
 
-export type UseAssistantHelpers = {
-  messages: Message[];
-  setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
-  setThreadId: (threadId: string | undefined) => void;
-  deleteThreadFromHistory: (threadId: string) => void;
-  threadId: string | undefined;
-  threads: Record<string, { creationDate: string; messages: Message[] }>;
-  input: string;
-  append: (
-    message: Message | CreateMessage,
-    requestOptions?: {
-      data?: Record<string, string>;
-    },
-  ) => Promise<void>;
-  stop: () => void;
-  setInput: React.Dispatch<React.SetStateAction<string>>;
-  handleInputChange: (
-    event:
-      | React.ChangeEvent<HTMLInputElement>
-      | React.ChangeEvent<HTMLTextAreaElement>,
-  ) => void;
-  submitMessage: (
-    event?: React.FormEvent<HTMLFormElement>,
-    requestOptions?: {
-      data?: Record<string, string>;
-    },
-  ) => Promise<void>;
-  status: AssistantStatus;
-  error: undefined | unknown;
-};
+export type AssistantStatus =
+  | 'in_progress'
+  | 'awaiting_message'
+  | 'awaiting_file'
+
+export interface AssistantStatusResponse {
+  status: AssistantStatus
+  threadId: string
+}
+
+export interface AssistantMessageResponse {
+  id: string
+  role: 'user' | 'assistant'
+  content: string
+  createdAt?: Date
+}
+
+export interface AssistantErrorResponse {
+  error: string
+  message: string
+}
+
+export interface UseAssistantOptions {
+  id: string
+  api: string
+  threadId?: string
+  inputFile?: File
+  clientSidePrompt?: string
+}
 
 export function useAssistant({
   id,
   api,
-  threadId: threadIdParam,
+  threadId: initialThreadId,
   inputFile,
-  credentials,
-  clientSidePrompt,
-  headers,
-  body,
-  onError,
-}: any): UseAssistantHelpers {
+  clientSidePrompt
+}: UseAssistantOptions) {
+  const [status, setStatus] = useState<AssistantStatus>('awaiting_message')
+  const [error, setError] = useState<{ message: string } | null>(null)
+  const [threadId, setThreadId] = useState<string | undefined>(initialThreadId)
+  const [threads, setThreads] = useState<{ id: string, messages: Message[] }[]>([])
 
-  const localStorageName = `assistantThreads-${id}`;
-
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput] = useState('');
-  const [currentThreadId, setCurrentThreadId] = useState<string | undefined>(
-    undefined,
-  );
-  const [status, setStatus] = useState<AssistantStatus>('awaiting_message');
-  const [error, setError] = useState<undefined | Error>(undefined);
-
-  const [threads, setThreads] = useState<
-    Record<string, { creationDate: string; messages: Message[] }>
-  >({});
-
-  useEffect(() => {
-    const assistantThreads = localStorage.getItem(localStorageName)
-    const threadsMap = JSON.parse(assistantThreads || '{}')
-
-    if (currentThreadId && threadsMap[currentThreadId] === undefined) {
-      threadsMap[currentThreadId] = { creationDate: new Date().toISOString(), messages: [] }
-      localStorage.setItem(localStorageName, JSON.stringify(threadsMap))
-    }
-
-    setThreads(threadsMap)
-  }, [currentThreadId]);
-
-  useEffect(() => {
-    const assistantThreads = localStorage.getItem(localStorageName)
-    const threadsMap = JSON.parse(assistantThreads || '{}')
-    if (currentThreadId && threadsMap[currentThreadId] !== undefined) {
-      threadsMap[currentThreadId].messages = messages
-      localStorage.setItem(localStorageName, JSON.stringify(threadsMap))
-      setThreads(threadsMap)
-    }
-  }, [messages]);
-
-  const handleInputChange = (
-    event:
-      | React.ChangeEvent<HTMLInputElement>
-      | React.ChangeEvent<HTMLTextAreaElement>,
-  ) => {
-    setInput(event.target.value);
-  };
-
-  const abortControllerRef = useRef<AbortController | null>(null);
-
-  const stop = useCallback(() => {
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-      abortControllerRef.current = null;
-    }
-  }, []);
-
-  const append = async (
-    message: Message | CreateMessage,
-    requestOptions?: {
-      data?: Record<string, string>;
+  const {
+    messages,
+    input,
+    handleInputChange,
+    handleSubmit,
+    isLoading,
+    error: chatError,
+    append,
+    setMessages
+  } = useChat({
+    api,
+    id,
+    body: {
+      threadId,
+      clientSidePrompt
     },
-  ) => {
-    setStatus('in_progress');
-
-    setMessages(messages => [
-      ...messages,
-      {
-        ...message,
-        id: message.id ?? generateId(),
-      },
-    ]);
-
-    setInput('');
-
-    const abortController = new AbortController();
-
-    try {
-      abortControllerRef.current = abortController;
-
-      const formData = new FormData();
-      formData.append("message", message.content);
-      formData.append("threadId", threadIdParam ?? currentThreadId ?? '');
-      formData.append("file", inputFile || '');
-      formData.append("filename", inputFile !== undefined ? inputFile.name : '');
-      formData.append("clientSidePrompt", clientSidePrompt || '');
-
-      const result = await fetch(api, {
-        method: "POST",
-        credentials,
-        signal: abortController.signal,
-        body: formData
-      });
-
-      if (result.body == null) {
-        throw new Error('The response body is empty.');
+    onResponse: async (response) => {
+      const threadIdHeader = response.headers.get('x-thread-id')
+      if (threadIdHeader) {
+        setThreadId(threadIdHeader)
       }
-
-      for await (const { type, value } of readDataStream(
-        result.body.getReader(),
-      )) {
-        switch (type) {
-          case 'assistant_message': {
-            setMessages(messages => [
-              ...messages,
-              {
-                id: value.id,
-                role: value.role,
-                content: value.content[0].text.value,
-              },
-            ]);
-            break;
-          }
-
-          case 'message_annotations': {
-            for (const annotation of value) {
-              if (annotation.type !== 'file_path') {
-                continue;
-              }
-              setMessages(messages => {
-                const lastMessage = messages[messages.length - 1];
-                lastMessage.content = lastMessage.content.replace(
-                  annotation.text,
-                  annotation.file_path.url,
-                );
-                return [...messages.slice(0, messages.length - 1), lastMessage];
-              });
-            }
-            break;
-          }
-
-          case 'text': {
-            setMessages(messages => {
-              const lastMessage = messages[messages.length - 1];
-              return [
-                ...messages.slice(0, messages.length - 1),
-                {
-                  id: lastMessage.id,
-                  role: lastMessage.role,
-                  content: lastMessage.content + value,
-                },
-              ];
-            });
-
-            break;
-          }
-
-          case 'data_message': {
-            setMessages(messages => [
-              ...messages,
-              {
-                id: value.id ?? generateId(),
-                role: 'data',
-                content: '',
-                data: value.data,
-              },
-            ]);
-            break;
-          }
-
-          case 'assistant_control_data': {
-            setCurrentThreadId(value.threadId);
-
-            setMessages(messages => {
-              const lastMessage = messages[messages.length - 1];
-              lastMessage.id = value.messageId;
-              return [...messages.slice(0, messages.length - 1), lastMessage];
-            });
-
-            break;
-          }
-
-          case 'error': {
-            setError(new Error(value));
-            break;
-          }
+      
+      // Check if the response is not ok and handle the error
+      if (!response.ok) {
+        try {
+          const clonedResponse = response.clone();
+          const data = await clonedResponse.json();
+          console.error("API error response:", data);
+          setError({ message: data.message || "An error occurred while processing your request" });
+          setStatus('awaiting_message');
+        } catch (err) {
+          console.error("Failed to parse error response:", err);
+          setError({ message: `Error ${response.status}: ${response.statusText}` });
+          setStatus('awaiting_message');
         }
       }
-    } catch (error) {
-      if (isAbortError(error) && abortController.signal.aborted) {
-        abortControllerRef.current = null;
+    },
+    onError: (err) => {
+      console.error("Chat error:", err);
+      setStatus('awaiting_message');
+      setError(err);
+    },
+    onFinish: () => {
+      setStatus('awaiting_message');
+    }
+  })
+
+  useEffect(() => {
+    if (chatError) {
+      console.error("Chat error from useChat:", chatError);
+      setError(chatError)
+    }
+  }, [chatError])
+
+  useEffect(() => {
+    if (isLoading) {
+      setStatus('in_progress')
+    } else {
+      setStatus('awaiting_message')
+    }
+  }, [isLoading])
+
+  useEffect(() => {
+    if (threadId) {
+      fetchThreads()
+    }
+  }, [threadId])
+
+  const fetchThreads = useCallback(async () => {
+    try {
+      const response = await fetch(`/api/chatbots/${id}/threads`)
+      if (!response.ok) {
+        throw new Error('Failed to fetch threads')
+      }
+      const data = await response.json()
+      setThreads(data)
+    } catch (err) {
+      console.error('Error fetching threads:', err)
+    }
+  }, [id])
+
+  const deleteThreadFromHistory = useCallback(async (threadIdToDelete: string) => {
+    try {
+      const response = await fetch(`/api/chatbots/${id}/threads/${threadIdToDelete}`, {
+        method: 'DELETE',
+      })
+      if (!response.ok) {
+        throw new Error('Failed to delete thread')
+      }
+      // Update the threads list
+      setThreads(prevThreads => prevThreads.filter(thread => thread.id !== threadIdToDelete))
+      
+      // If the deleted thread is the current one, reset to a new thread
+      if (threadId === threadIdToDelete) {
+        setThreadId(undefined)
+        setMessages([])
+      }
+    } catch (err) {
+      console.error('Error deleting thread:', err)
+      setError({ message: 'Failed to delete conversation' })
+    }
+  }, [id, threadId, setMessages])
+
+  const submitMessage = useCallback(
+    async (options: { message?: string } = {}) => {
+      if (status === 'in_progress') {
+        console.log("Message submission blocked: already in progress");
         return;
       }
 
-      if (onError && error instanceof Error) {
-        onError(error);
+      const messageValue = options.message ?? input;
+
+      if (!messageValue && !inputFile) {
+        console.log("Message submission blocked: no message or file");
+        return;
       }
 
-      setError(error as Error);
-    } finally {
-      abortControllerRef.current = null;
-      setStatus('awaiting_message');
-    }
-  };
+      console.log(`Submitting message to chatbot ${id}:`, { 
+        messageLength: messageValue.length,
+        hasFile: !!inputFile,
+        threadId
+      });
 
-  const submitMessage = async (
-    event?: React.FormEvent<HTMLFormElement>,
-    requestOptions?: {
-      data?: Record<string, string>;
+      setStatus('in_progress');
+      setError(null);
+
+      let fileId = null;
+
+      if (inputFile) {
+        try {
+          console.log(`Uploading file: ${inputFile.name} (${inputFile.size} bytes)`);
+          
+          const formData = new FormData();
+          formData.append('file', inputFile);
+          formData.append('chatbotId', id);
+          formData.append('threadId', threadId || '');
+
+          const uploadResponse = await fetch('/api/chatbots/upload', {
+            method: 'POST',
+            body: formData
+          });
+
+          if (!uploadResponse.ok) {
+            const errorData = await uploadResponse.json().catch(() => ({}));
+            console.error("File upload error:", errorData);
+            throw new Error(errorData.message || 'Failed to upload file');
+          }
+
+          const responseData = await uploadResponse.json();
+          fileId = responseData.fileId;
+          console.log(`File uploaded successfully, fileId: ${fileId}`);
+          
+          // If we got a threadId from the upload, use it
+          if (responseData.threadId && !threadId) {
+            setThreadId(responseData.threadId);
+            console.log(`Thread created during file upload: ${responseData.threadId}`);
+          }
+        } catch (err) {
+          console.error("File upload error:", err);
+          setStatus('awaiting_message');
+          setError({ message: err instanceof Error ? err.message : 'Failed to upload file' });
+          return;
+        }
+      }
+
+      const userMessage = {
+        id: nanoid(),
+        role: 'user' as const,
+        content: messageValue
+      };
+
+      try {
+        console.log(`Appending message to chat:`, {
+          threadId,
+          hasFileId: !!fileId,
+          hasClientSidePrompt: !!clientSidePrompt
+        });
+        
+        await append(userMessage, {
+          options: {
+            body: {
+              threadId,
+              fileId,
+              clientSidePrompt
+            }
+          }
+        });
+        
+        console.log("Message appended successfully");
+      } catch (err) {
+        console.error("Message append error:", err);
+        setStatus('awaiting_message');
+        setError({ message: err instanceof Error ? err.message : 'Failed to send message' });
+      }
     },
-  ) => {
-    event?.preventDefault?.();
-
-    if (input === '') {
-      return;
-    }
-
-    append({ role: 'user', content: input }, requestOptions);
-  };
-
-  const setThreadId = (threadId: string | undefined) => {
-    setCurrentThreadId(threadId);
-    if (threadId === undefined) {
-      setMessages([]);
-      return;
-    }
-
-    const assistantThreads = localStorage.getItem(localStorageName)
-    const threads = JSON.parse(assistantThreads || '{}')
-    setThreads(threads)
-    if (threads[threadId] !== undefined) {
-      setMessages(threads[threadId].messages)
-    }
-    else {
-      setMessages([]);
-    }
-  };
-
-  const deleteThreadFromHistory = (threadId: string) => {
-    const assistantThreads = localStorage.getItem(localStorageName)
-    const threads = JSON.parse(assistantThreads || '{}')
-    delete threads[threadId]
-    localStorage.setItem(localStorageName, JSON.stringify(threads))
-
-    // if threadId is the current thread set to undefined
-    if (currentThreadId === threadId) {
-      setThreadId(undefined)
-    }
-
-    setThreads(threads)
-  }
+    [append, id, input, inputFile, status, threadId, clientSidePrompt]
+  );
 
   return {
-    append,
     messages,
-    setMessages,
-    threadId: currentThreadId,
-    setThreadId,
-    deleteThreadFromHistory,
-    threads,
+    threadId,
     input,
-    setInput,
     handleInputChange,
     submitMessage,
     status,
     error,
-    stop,
-  };
+    setThreadId,
+    threads,
+    deleteThreadFromHistory
+  }
 }

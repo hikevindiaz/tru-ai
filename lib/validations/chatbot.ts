@@ -1,12 +1,12 @@
 import * as z from "zod"
 
 export const chatbotSchema = z.object({
-    name: z.string().min(3).max(50),
-    openAIKey: z.string().min(1),
-    prompt: z.string().min(1),
-    welcomeMessage: z.string().min(1),
-    chatbotErrorMessage: z.string().min(1),
-    modelId: z.string().min(1),
+    name: z.string().min(1).max(50),
+    prompt: z.string().optional().default("You are a helpful assistant."),
+    openAIKey: z.string().optional(),
+    modelId: z.string(),
     files: z.array(z.string()),
-    rightToLeftLanguage: z.boolean().default(false),
+    welcomeMessage: z.string().optional().default("Hello! How can I help you today?"),
+    chatbotErrorMessage: z.string().optional().default("Oops! An error has occurred. If the issue persists, feel free to reach out to our support team for assistance. We're here to help!"),
+    rightToLeftLanguage: z.boolean().optional().default(false),
 })

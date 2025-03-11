@@ -22,6 +22,13 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { useEnterSubmit } from '@/hooks/use-enter-submit'
 import { ChatHistory } from "./chat-history"
 
+// Define the correct type for threads to match ChatHistory component
+interface Thread {
+  id: string;
+  messages: Message[];
+  creationDate?: string;
+}
+
 interface ChatbotProps {
   chatbot: Chatbot
   defaultMessage: string
@@ -47,6 +54,15 @@ export function Chat({ chatbot, defaultMessage, className, withExitX = false, cl
   const { status, messages, input, submitMessage, handleInputChange, error, threadId, setThreadId, threads, deleteThreadFromHistory } =
     useAssistant({ id: chatbot.id, api: `/api/chatbots/${chatbot.id}/chat`, inputFile: inputFileRef.current?.files ? inputFileRef.current.files[0] : undefined, clientSidePrompt: clientSidePrompt });
 
+  // Convert threads to the format expected by ChatHistory
+  const formattedThreads = threads.reduce((acc, thread) => {
+    acc[thread.id] = {
+      messages: thread.messages,
+      creationDate: new Date().toISOString() // Use current date if not provided
+    };
+    return acc;
+  }, {} as Record<string, { messages: Message[], creationDate: string }>);
+
   function handleSubmitMessage(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
 
@@ -54,7 +70,6 @@ export function Chat({ chatbot, defaultMessage, className, withExitX = false, cl
 
     setFileUploaded(false)
     if (inputFileRef.current) {
-
       inputFileRef.current.value = '';
     }
   }
@@ -74,18 +89,42 @@ export function Chat({ chatbot, defaultMessage, className, withExitX = false, cl
 
   useEffect(() => {
     if (error) {
-      console.log(error)
+      console.log("Chat error:", error);
+      
+      // Check if we need to run diagnostics
+      if (messages.length === 0) {
+        // Run diagnostics if this is the first message
+        fetch('/api/diagnostics/openai')
+          .then(response => response.json())
+          .then(data => {
+            console.log("OpenAI API diagnostics:", data);
+            if (!data.success) {
+              toast({
+                title: 'OpenAI API Connection Issue',
+                description: data.message,
+                variant: 'destructive'
+              });
+            }
+          })
+          .catch(err => {
+            console.error("Failed to run diagnostics:", err);
+          });
+      }
+      
       toast({
         title: 'Error',
-        description: error.message,
+        description: error?.message || "An error occurred while processing your message",
         variant: 'destructive'
-      })
+      });
     }
-  }, [error])
+  }, [error, messages.length]);
 
   useEffect(() => {
     // Scroll to the bottom of the container on messages update
-    document.documentElement.scrollTop = document.getElementById("end").offsetTop;
+    const endElement = document.getElementById("end");
+    if (endElement) {
+      document.documentElement.scrollTop = endElement.offsetTop;
+    }
   }, [messages]);
 
   async function handleInquirySubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -152,10 +191,61 @@ export function Chat({ chatbot, defaultMessage, className, withExitX = false, cl
     window.URL.revokeObjectURL(url);
   }
 
+  // Function to test OpenAI API connection
+  async function testOpenAIConnection() {
+    try {
+      const response = await fetch('/api/test-openai');
+      const data = await response.json();
+      
+      console.log("OpenAI API test result:", data);
+      
+      toast({
+        title: data.success ? 'OpenAI API Connection Successful' : 'OpenAI API Connection Failed',
+        description: data.message,
+        variant: data.success ? 'default' : 'destructive'
+      });
+    } catch (error) {
+      console.error("Error testing OpenAI connection:", error);
+      toast({
+        title: 'Error Testing OpenAI Connection',
+        description: error instanceof Error ? error.message : String(error),
+        variant: 'destructive'
+      });
+    }
+  }
+  
+  // Function to test OpenAI Assistants API
+  async function testAssistantsAPI() {
+    try {
+      toast({
+        title: 'Testing Assistants API',
+        description: 'This may take a few seconds...',
+      });
+      
+      const response = await fetch('/api/test-assistants');
+      const data = await response.json();
+      
+      console.log("OpenAI Assistants API test result:", data);
+      
+      toast({
+        title: data.success ? 'Assistants API Working' : 'Assistants API Failed',
+        description: data.success ? `Response: ${data.response}` : data.message,
+        variant: data.success ? 'default' : 'destructive'
+      });
+    } catch (error) {
+      console.error("Error testing Assistants API:", error);
+      toast({
+        title: 'Error Testing Assistants API',
+        description: error instanceof Error ? error.message : String(error),
+        variant: 'destructive'
+      });
+    }
+  }
+
   return (
     <>
-      {chatbot.chatHistoryEnabled && <ChatHistory threads={threads} setThreadId={setThreadId} threadId={threadId} deleteThreadFromHistory={deleteThreadFromHistory}></ChatHistory>}
-      <CardHeader style={{ background: #ffffff }} className="sticky z-30 top-0 border-b p-4">
+      {chatbot.chatHistoryEnabled && <ChatHistory threads={formattedThreads} setThreadId={setThreadId} threadId={threadId} deleteThreadFromHistory={deleteThreadFromHistory}></ChatHistory>}
+      <CardHeader style={{ background: "#ffffff" }} className="sticky z-30 top-0 border-b p-4">
         <div className="flex flex-row justify-between items-center">
           <h2 className="text-xl font-bold flex items-center h-10 gap-2">
             <div style={{ color: chatbot.chatHeaderTextColor }}>
@@ -166,9 +256,8 @@ export function Chat({ chatbot, defaultMessage, className, withExitX = false, cl
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
-                  variant={'nothing'}
+                  variant="ghost"
                   className="cursor-pointer"
-                  size={'icon'}
                   onClick={() => {
                     window.location.reload()
                   }}
@@ -182,9 +271,8 @@ export function Chat({ chatbot, defaultMessage, className, withExitX = false, cl
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
-                  variant={'nothing'}
+                  variant="ghost"
                   className="cursor-pointer"
-                  size={'icon'}
                   onClick={downloadTranscript}
                 >
                   <Icons.download
@@ -196,11 +284,37 @@ export function Chat({ chatbot, defaultMessage, className, withExitX = false, cl
               </TooltipTrigger>
               <TooltipContent>Download Transcript</TooltipContent>
             </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className="cursor-pointer"
+                  onClick={testOpenAIConnection}
+                >
+                  <Icons.activity style={{ color: chatbot.chatHeaderTextColor }} className="h-4 w-4" />
+                  <span className="sr-only">Test API</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Test OpenAI API</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className="cursor-pointer"
+                  onClick={testAssistantsAPI}
+                >
+                  <Icons.bot style={{ color: chatbot.chatHeaderTextColor }} className="h-4 w-4" />
+                  <span className="sr-only">Test Assistants API</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Test Assistants API</TooltipContent>
+            </Tooltip>
             {withExitX &&
               <div className="items-end">
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button onClick={closeChat} variant="nothing" className="cursor-pointer">
+                    <Button onClick={closeChat} variant="ghost" className="cursor-pointer">
                       <Icons.close style={{ color: chatbot.chatHeaderTextColor }} className="h-5 w-5 text-gray-500" />
                     </Button>
                   </TooltipTrigger>
@@ -245,7 +359,7 @@ export function Chat({ chatbot, defaultMessage, className, withExitX = false, cl
                   </button>
                   <Dialog open={open} onOpenChange={setOpen}>
                     <DialogTrigger asChild>
-                      <Button className="w-full bg-white" variant="outline">
+                      <Button className="w-full bg-white" variant="secondary">
                         {chatbot.inquiryLinkText}
                       </Button>
                     </DialogTrigger>
@@ -359,7 +473,7 @@ export function Chat({ chatbot, defaultMessage, className, withExitX = false, cl
                         <Button
                           id="submit"
                           disabled={status !== 'awaiting_message' || input === ''}
-                          type="submit" size="icon">
+                          type="submit">
                           <Icons.arrowRight />
                           <span className="sr-only">Send message</span>
                         </Button>

@@ -52,19 +52,42 @@ model Chatbot {
   id                  String        @id @default(cuid())
   name                String
   userId              String
-  openaiId            String
+  openaiId            String?       @default("")
   createdAt           DateTime      @default(now()) @map(name: "created_at")
-  openaiKey           String
+  openaiKey           String?       @default("")
   modelId             String?
   model               ChatbotModel? @relation(fields: [modelId], references: [id])
-  prompt              String?
-  welcomeMessage      String
-  chatbotErrorMessage String        @default("Oops! An error has occurred. If the issue persists, feel free to reach out to our support team for assistance. We're here to help!")
+  prompt              String?       @default("You are a helpful assistant.")
+  welcomeMessage      String?       @default("Hello! How can I help you today?")
+  chatbotErrorMessage String?       @default("I'm sorry, I encountered an error. Please try again later.")
   isImported          Boolean       @default(false)
+  rightToLeftLanguage Boolean       @default(false)
+  language            String?       @default("en")
+  secondLanguage      String?
+  
+  // LLM Tab fields
+  maxPromptTokens     Int           @default(1200)
+  maxCompletionTokens Int           @default(1200)
+  temperature         Float         @default(0.7)
+  
+  // Training related fields
+  lastTrainedAt       DateTime?
+  trainingStatus      String        @default("idle") // "idle", "training", "success", "error"
+  trainingMessage     String?
+  
+  // Call Tab fields
+  phoneNumber         String?
+  voice               String?
+  responseRate        String?
+  checkUserPresence   Boolean?      @default(false)
+  presenceMessage     String?
+  presenceMessageDelay Int?
+  silenceTimeout      Int?
+  hangUpMessage       String?
+  callTimeout         Int?
 
   chatTitle              String  @default("2")
   chatMessagePlaceHolder String  @default("Type a message...")
-  rightToLeftLanguage    Boolean @default(false)
 
   bubbleColor                 String  @default("#FFFFFF")
   bubbleTextColor             String  @default("#000000")
@@ -93,9 +116,6 @@ model Chatbot {
 
   displayBranding            Boolean @default(true)
   chatFileAttachementEnabled Boolean @default(false)
-
-  maxCompletionTokens Int?
-  maxPromptTokens     Int?
 
   bannedIps       String[] @default([])
   allowEveryone   Boolean  @default(true)

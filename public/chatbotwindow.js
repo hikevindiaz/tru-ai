@@ -15,7 +15,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
     // Create the iframe element
     var iframe = document.createElement('iframe');
-    iframe.src = `https://openassistantgpt.io/embed/${chatbotId}/window?chatbox=false`;
+    iframe.src = `https://dashboard.getlinkai.com/embed/${chatbotId}/window?chatbox=false`;
     iframe.setAttribute("style", `
     overflow: hidden;
     height: 80vh;

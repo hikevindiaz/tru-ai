@@ -1,11 +1,13 @@
-import { authOptions } from "@/lib/auth";
-import { db } from "@/lib/db";
+import { NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
+import OpenAI from 'openai';
 import { chatbotSchema } from "@/lib/validations/chatbot";
-import { getServerSession } from "next-auth";
-import OpenAI from "openai";
 import { z } from "zod";
 import { fileTypes as codeFile } from "@/lib/validations/codeInterpreter";
 import { fileTypes as searchFile } from "@/lib/validations/fileSearch";
+import { getOpenAIKey, getModelNameFromId } from '@/lib/openai';
 
 export const maxDuration = 300;
 
@@ -15,285 +17,215 @@ const routeContextSchema = z.object({
   }),
 })
 
-async function verifyCurrentUserHasAccessToChatbot(chatbotId: string) {
-  const session = await getServerSession(authOptions)
+// Use the global API key
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
-  const count = await db.chatbot.count({
-    where: {
-      id: chatbotId,
-      userId: session?.user?.id,
-    },
-  })
-
-  return count > 0
+// Simple function to verify if an assistant exists
+async function verifyAssistant(openai: OpenAI, assistantId: string) {
+  try {
+    await openai.beta.assistants.retrieve(assistantId);
+    return true;
+  } catch (error) {
+    console.error('Error verifying assistant:', error);
+    return false;
+  }
 }
 
 export async function GET(
   req: Request,
-  context: z.infer<typeof routeContextSchema>
+  { params }: { params: { chatbotId: string } }
 ) {
-
-  const { params } = routeContextSchema.parse(context)
-
-  if (!(await verifyCurrentUserHasAccessToChatbot(params.chatbotId))) {
-    return new Response(null, { status: 403 })
-  }
-
   try {
-    const chatbot = await db.chatbot.findUnique({
-      select: {
-        id: true,
-        name: true,
-        createdAt: true,
-      },
-      where: {
-        id: params.chatbotId,
-      },
-    })
+    // Check if user is authenticated
+    const session = await getServerSession(authOptions);
+    if (!session?.user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
-    return new Response(JSON.stringify(chatbot))
+    const chatbotId = params.chatbotId;
+
+    // Fetch the chatbot
+    const chatbot = await prisma.chatbot.findUnique({
+      where: {
+        id: chatbotId,
+        userId: session.user.id,
+      },
+      include: {
+        model: true,
+        knowledgeSources: {
+          select: {
+            id: true,
+            name: true,
+            description: true,
+          },
+        },
+      },
+    });
+
+    if (!chatbot) {
+      return NextResponse.json({ error: "Chatbot not found" }, { status: 404 });
+    }
+
+    return NextResponse.json(chatbot);
   } catch (error) {
-    return new Response(null, { status: 500 })
+    console.error("Error fetching chatbot:", error);
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Unknown error occurred" },
+      { status: 500 }
+    );
   }
 }
 
-
 export async function PATCH(
   req: Request,
-  context: z.infer<typeof routeContextSchema>
+  { params }: { params: { chatbotId: string } }
 ) {
-  const session = await getServerSession(authOptions)
-  const { params } = routeContextSchema.parse(context)
-
-  if (!(await verifyCurrentUserHasAccessToChatbot(params.chatbotId))) {
-    return new Response(null, { status: 403 })
-  }
-
-  const openAIConfig = await db.openAIConfig.findUnique({
-    select: {
-      globalAPIKey: true,
-      id: true,
-    },
-    where: {
-      userId: session?.user?.id
-    }
-  })
-
-  if (!openAIConfig?.globalAPIKey) {
-    return new Response("Missing your global OpenAI API key, please configure your account.", { status: 400 })
-  }
-
-  const body = await req.json()
-  const payload = chatbotSchema.parse(body)
-
   try {
-    const openaiTest = new OpenAI({
-      apiKey: payload.openAIKey
-    })
-    await openaiTest.models.list()
-  } catch (error) {
-    return new Response("Invalid OpenAI API key", { status: 400, statusText: "Invalid OpenAI API key" })
-  }
-
-  try {
-    const chatbot = await db.chatbot.update({
-      where: {
-        id: params.chatbotId
-      },
-      data: {
-        name: payload.name,
-        welcomeMessage: payload.welcomeMessage,
-        prompt: payload.prompt,
-        chatbotErrorMessage: payload.chatbotErrorMessage,
-        openaiKey: payload.openAIKey,
-        modelId: payload.modelId,
-        rightToLeftLanguage: payload.rightToLeftLanguage,
-      },
-      select: {
-        id: true,
-        name: true,
-        openaiId: true,
-        prompt: true,
-        modelId: true,
-      },
-    })
-
-    const currentFiles = await db.chatbotFiles.findMany({
-      where: {
-        chatbotId: chatbot.id,
-      },
-      select: {
-        id: true,
-        fileId: true,
-      }
-    })
-
-    try {
-      await db.chatbotFiles.deleteMany({
-        where: {
-          id: {
-            in: currentFiles.map((file) => file.id)
-          }
-        }
-      })
-    } catch (error) {
-      console.log("No file to delete")
+    const session = await getServerSession(authOptions);
+    if (!session?.user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    await db.chatbotFiles.createMany({
-      data: payload.files.map((fileId: string) => ({
-        chatbotId: chatbot.id,
-        fileId: fileId,
-      }))
-    })
+    const chatbotId = params.chatbotId;
+    const body = await req.json();
 
-    const openai = new OpenAI({
-      apiKey: openAIConfig?.globalAPIKey
-    })
-
-    const model = await db.chatbotModel.findFirst({
+    // Verify the chatbot exists and belongs to the user
+    const existingChatbot = await prisma.chatbot.findUnique({
       where: {
-        id: chatbot.modelId,
+        id: chatbotId,
+        userId: session.user.id,
       },
-      select: {
-        id: true,
-        name: true,
-      }
-    })
+    });
 
-    const files = await db.file.findMany({
-      where: {
-        id: {
-          in: payload.files
+    if (!existingChatbot) {
+      return NextResponse.json({ error: "Chatbot not found" }, { status: 404 });
+    }
+
+    // Prepare update data, handling all possible fields including training-related fields
+    const updateData: any = {};
+    
+    // Basic fields
+    if (body.name !== undefined) updateData.name = body.name;
+    if (body.prompt !== undefined) updateData.prompt = body.prompt;
+    if (body.welcomeMessage !== undefined) updateData.welcomeMessage = body.welcomeMessage;
+    if (body.chatbotErrorMessage !== undefined) updateData.chatbotErrorMessage = body.chatbotErrorMessage;
+    if (body.modelId !== undefined) updateData.modelId = body.modelId;
+    if (body.temperature !== undefined) updateData.temperature = body.temperature;
+    if (body.maxPromptTokens !== undefined) updateData.maxPromptTokens = body.maxPromptTokens;
+    if (body.maxCompletionTokens !== undefined) updateData.maxCompletionTokens = body.maxCompletionTokens;
+    
+    // Training-related fields
+    if (body.trainingStatus !== undefined) updateData.trainingStatus = body.trainingStatus;
+    if (body.trainingMessage !== undefined) updateData.trainingMessage = body.trainingMessage;
+    if (body.lastTrainedAt !== undefined) updateData.lastTrainedAt = body.lastTrainedAt;
+
+    // Handle knowledge sources if provided
+    if (body.knowledgeSources !== undefined) {
+      // First, disconnect all existing knowledge sources
+      await prisma.chatbot.update({
+        where: { id: chatbotId },
+        data: {
+          knowledgeSources: {
+            disconnect: await prisma.knowledgeSource.findMany({
+              where: {
+                chatbots: {
+                  some: {
+                    id: chatbotId,
+                  },
+                },
+              },
+              select: {
+                id: true,
+              },
+            }),
+          },
         },
-      },
-      select: {
-        id: true,
-        name: true,
-        openAIFileId: true,
-      }
-    })
-
-    // validate file extension to create vector store or user code interpreter
-    let bodyTools = {
-      'code_interpreter': {
-        file_ids: []
-      },
-      'file_search': {
-        vector_store_ids: []
-      }
-    };
-
-    // validate file extension to create vector store 
-    const allFileforFileSearch = files.filter((f) => searchFile.includes(f.name.split('.').pop()!));
-    console.log(allFileforFileSearch);
-
-    const allFileforCodeInterpreter = files.filter((f) => codeFile.includes(f.name.split('.').pop()?.toLocaleLowerCase()!));
-    console.log(allFileforCodeInterpreter);
-
-    bodyTools['code_interpreter'] = {
-      file_ids: allFileforCodeInterpreter.map((f) => f.openAIFileId)
-    };
-
-    if (allFileforFileSearch.length > 0) {
-      const vectorStores = await openai.beta.vectorStores.list();
-      const vectorStore = vectorStores.data.find((vs) => vs.name === `Vector Store - ${body.name}`);
-
-      if (vectorStore) {
-        await openai.beta.vectorStores.del(vectorStore.id);
-      }
-
-      const batch = await openai.beta.vectorStores.create({
-        name: `Vector Store - ${body.name}`,
-        file_ids: allFileforFileSearch.map((f) => f.openAIFileId)
       });
 
-      bodyTools['file_search'] = {
-        vector_store_ids: [batch.id]
-      };
+      // Then, connect the new knowledge sources if any
+      if (body.knowledgeSources.length > 0) {
+        await prisma.chatbot.update({
+          where: { id: chatbotId },
+          data: {
+            knowledgeSources: {
+              connect: body.knowledgeSources.map((ks: any) => ({ id: ks.id })),
+            },
+          },
+        });
+      }
     }
 
-    await openai.beta.assistants.update(
-      chatbot.openaiId,
-      {
-        name: chatbot.name,
-        instructions: chatbot.prompt,
-        model: model?.name,
-        tools: [{ type: "file_search" }, { type: "code_interpreter" }],
-        tool_resources: {
-          ...bodyTools
-        },
-      }
-    )
+    // Update the chatbot with the prepared data
+    const updatedChatbot = await prisma.chatbot.update({
+      where: { id: chatbotId },
+      data: updateData,
+      include: {
+        model: true,
+        knowledgeSources: true,
+      },
+    });
 
-    return new Response(JSON.stringify(chatbot))
+    return NextResponse.json(updatedChatbot);
   } catch (error) {
-    console.log(error)
-    return new Response(null, { status: 500 })
+    console.error("Error updating chatbot:", error);
+    return NextResponse.json(
+      { error: "Failed to update chatbot" },
+      { status: 500 }
+    );
   }
 }
 
 export async function DELETE(
   req: Request,
-  context: z.infer<typeof routeContextSchema>
+  { params }: { params: { chatbotId: string } }
 ) {
-
-  const { params } = routeContextSchema.parse(context)
-
-  if (!(await verifyCurrentUserHasAccessToChatbot(params.chatbotId))) {
-    return new Response(null, { status: 403 })
-  }
-
   try {
-    const session = await getServerSession(authOptions)
+    const session = await getServerSession(authOptions);
 
-    const chatbot = await db.chatbot.findUnique({
-      select: {
-        id: true,
-        name: true,
-        openaiId: true,
-        isImported: true,
-      },
-      where: {
-        id: params.chatbotId
-      }
-    })
-
-    if (!chatbot!.isImported) {
-      try {
-        const openAIConfig = await db.openAIConfig.findUnique({
-          select: {
-            globalAPIKey: true,
-            id: true,
-          },
-          where: {
-            userId: session?.user?.id
-          }
-        })
-
-        if (!openAIConfig?.globalAPIKey) {
-          return new Response("Missing OpenAI API key", { status: 403 })
-        }
-
-        const openai = new OpenAI({
-          apiKey: openAIConfig?.globalAPIKey
-        })
-
-        await openai.beta.assistants.del(chatbot?.openaiId || '')
-      } catch (error) {
-        console.log(error)
-      }
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    await db.chatbot.delete({
+    const chatbot = await prisma.chatbot.findUnique({
       where: {
-        id: params.chatbotId
-      }
-    })
+        id: params.chatbotId,
+      },
+    });
 
-    return new Response(null, { status: 204 })
+    if (!chatbot) {
+      return NextResponse.json({ error: 'Chatbot not found' }, { status: 404 });
+    }
+
+    if (chatbot.userId !== session.user.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Delete the chatbot from the database
+    await prisma.chatbot.delete({
+      where: {
+        id: params.chatbotId,
+      },
+    });
+
+    // Initialize OpenAI client with the global API key
+    const openai = new OpenAI({
+      apiKey: OPENAI_API_KEY,
+    });
+
+    // Try to delete the assistant from OpenAI
+    try {
+      await openai.beta.assistants.del(chatbot.openaiId);
+    } catch (error) {
+      console.error('Error deleting assistant from OpenAI:', error);
+      // Continue with the deletion even if the OpenAI deletion fails
+    }
+
+    return NextResponse.json({ success: true });
   } catch (error) {
-    console.log(error)
-    return new Response(null, { status: 500 })
+    console.error('Error deleting chatbot:', error);
+    return NextResponse.json(
+      { error: 'Failed to delete chatbot' },
+      { status: 500 }
+    );
   }
 }

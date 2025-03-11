@@ -10,201 +10,111 @@ import { RequiresHigherPlanError } from "@/lib/exceptions";
 import { fileTypes as codeFile } from "@/lib/validations/codeInterpreter";
 import { fileTypes as searchFile } from "@/lib/validations/fileSearch";
 
+// Add the global OpenAI API key from environment variables
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+
 export const maxDuration = 60;
 
-export async function GET(request: Request) {
-  // Ensure the user is authenticated
-  const session = await getServerSession(authOptions);
-  if (!session || !session.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
+export async function GET(req: Request) {
   try {
-    // Fetch all chatbots for the user
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const chatbots = await prisma.chatbot.findMany({
       where: {
         userId: session.user.id,
       },
-      select: {
-        id: true,
-        name: true,
+      include: {
+        model: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        knowledgeSources: true,
       },
       orderBy: {
-        name: 'asc',
+        createdAt: 'desc',
       },
     });
-    
+
+    // Log the first chatbot for debugging
+    if (chatbots.length > 0) {
+      console.log("Sample chatbot data:", JSON.stringify({
+        id: chatbots[0].id,
+        name: chatbots[0].name,
+        modelId: chatbots[0].modelId,
+        temperature: chatbots[0].temperature,
+        maxPromptTokens: chatbots[0].maxPromptTokens,
+        maxCompletionTokens: chatbots[0].maxCompletionTokens,
+        knowledgeSources: chatbots[0].knowledgeSources?.map(ks => ({ id: ks.id, name: ks.name }))
+      }, null, 2));
+    }
+
     return NextResponse.json(chatbots);
   } catch (error) {
-    console.error("Error fetching chatbots:", error);
-    return NextResponse.json({ 
-      error: "Failed to fetch chatbots",
-      details: error instanceof Error ? error.message : String(error)
-    }, { status: 500 });
+    console.error('Error fetching chatbots:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch chatbots' },
+      { status: 500 }
+    );
   }
 }
 
+// Define the types for the tools to fix the linter errors
+type ToolResources = {
+  code_interpreter: {
+    file_ids: string[];
+  };
+  file_search: {
+    vector_store_ids: string[];
+  };
+};
+
 export async function POST(req: Request) {
   try {
-    const session = await getServerSession(authOptions)
-
-    if (!session) {
-      return new Response("Unauthorized", { status: 403 })
+    const session = await getServerSession(authOptions);
+    if (!session?.user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Validate user subscription plan
-    const { user } = session
-    const subscriptionPlan = await getUserSubscriptionPlan(user.id)
-
-    const count = await prisma.chatbot.count({
-      where: {
-        userId: user.id,
-      },
-    })
-
-    if (count >= subscriptionPlan.maxChatbots) {
-      throw new RequiresHigherPlanError()
+    const body = await req.json();
+    
+    // Validate required fields
+    if (!body.name) {
+      return NextResponse.json(
+        { error: "Name is required" },
+        { status: 400 }
+      );
     }
 
-    const json = await req.json()
-    const body = chatbotSchema.parse(json)
-
-    const model = await prisma.chatbotModel.findUnique({
-      where: {
-        id: body.modelId
-      }
-    })
-
-    if (!model) {
-      return new Response("Invalid Model", { status: 400 })
-    }
-
-    const openAIConfig = await prisma.openAIConfig.findUnique({
-      select: {
-        globalAPIKey: true,
-        id: true,
-      },
-      where: {
-        userId: session?.user?.id
-      }
-    })
-
-    if (!openAIConfig?.globalAPIKey) {
-      return new Response("Missing your global OpenAI API key, please configure your account.", { status: 400 })
-    }
-
-    const openai = new OpenAI({
-      apiKey: openAIConfig?.globalAPIKey
-    })
-
-    const files = await prisma.file.findMany({
-      select: {
-        id: true,
-        openAIFileId: true,
-        name: true,
-      },
-      where: {
-        id: {
-          in: body.files
-        },
-      },
-    })
-
-    if (!files) {
-      return new Response("Invalid files", { status: 400 })
-    }
-
-    try {
-      const openaiTest = new OpenAI({
-        apiKey: body.openAIKey
-      })
-      await openaiTest.models.list()
-    } catch (error) {
-      return new Response("Invalid OpenAI API key", { status: 400, statusText: "Invalid OpenAI API key" })
-    }
-
-    // validate file extension to create vector store or user code interpreter
-    let bodyTools = {
-      'code_interpreter': {
-        file_ids: []
-      },
-      'file_search': {
-        vector_store_ids: []
-      }
-    };
-
-    // validate file extension to create vector store 
-    const allFileforFileSearch = files.filter((f) => searchFile.includes(f.name.split('.').pop()!));
-    console.log(allFileforFileSearch);
-
-    const allFileforCodeInterpreter = files.filter((f) => codeFile.includes(f.name.split('.').pop()?.toLocaleLowerCase()!));
-    console.log(allFileforCodeInterpreter);
-
-    bodyTools['code_interpreter'] = {
-      file_ids: allFileforCodeInterpreter.map((f) => f.openAIFileId)
-    };
-
-    if (allFileforFileSearch.length > 0) {
-      const vectorStores = await openai.beta.vectorStores.list();
-      const vectorStore = vectorStores.data.find((vs) => vs.name === `Vector Store - ${body.name}`);
-
-      if (vectorStore) {
-        await openai.beta.vectorStores.del(vectorStore.id);
-      }
-
-      const batch = await openai.beta.vectorStores.create({
-        name: `Vector Store - ${body.name}`,
-        file_ids: allFileforFileSearch.map((f) => f.openAIFileId)
-      });
-
-      bodyTools['file_search'] = {
-        vector_store_ids: [batch.id]
-      };
-    }
-
-    const createdChatbot = await openai.beta.assistants.create({
-      name: body.name,
-      instructions: body.prompt,
-      model: model.name,
-      tools: [{ type: "file_search" }, { type: "code_interpreter" }],
-      tool_resources: {
-        ...bodyTools
-      }
-    })
-
+    // Create the chatbot with default values for new fields
     const chatbot = await prisma.chatbot.create({
       data: {
         name: body.name,
-        prompt: body.prompt,
-        openaiKey: body.openAIKey,
-        openaiId: createdChatbot.id,
-        modelId: model.id,
-        userId: user?.id,
-        welcomeMessage: body.welcomeMessage,
-        chatbotErrorMessage: body.chatbotErrorMessage,
+        userId: session.user.id,
+        prompt: body.prompt || "You are a helpful assistant.",
+        welcomeMessage: body.welcomeMessage || "Hello! How can I help you today?",
+        chatbotErrorMessage: body.chatbotErrorMessage || "I'm sorry, I encountered an error. Please try again later.",
+        temperature: body.temperature || 0.7,
+        maxPromptTokens: body.maxPromptTokens || 1200,
+        maxCompletionTokens: body.maxCompletionTokens || 1200,
+        // Initialize training-related fields with default values
+        trainingStatus: "idle",
+        trainingMessage: null,
+        lastTrainedAt: null,
       },
-      select: {
-        id: true,
-      },
-    })
+    });
 
-    await prisma.chatbotFiles.createMany(
-      {
-        data: files.map((file) => ({
-          chatbotId: chatbot.id,
-          fileId: file.id,
-        })),
-      }
-    )
-
-    return new Response(JSON.stringify({ chatbot }))
+    return NextResponse.json(chatbot);
   } catch (error) {
-    console.log(error)
-
-    if (error instanceof RequiresHigherPlanError) {
-      return new Response("Upgrade to higher plan", { status: 402 })
-    }
-
-    return new Response(null, { status: 500 })
+    console.error("Error creating chatbot:", error);
+    return NextResponse.json(
+      { error: "Failed to create chatbot" },
+      { status: 500 }
+    );
   }
 }

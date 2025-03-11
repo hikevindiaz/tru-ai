@@ -5,6 +5,12 @@ import { db } from "@/lib/db"
 import { getUserSubscriptionPlan } from "@/lib/subscription"
 import { getClientIP } from "@/lib/getIP"
 import { Icons } from "@/components/icons"
+import dynamic from 'next/dynamic'
+
+// Import the Chat component with no SSR to avoid hydration mismatches
+const ClientSideChat = dynamic(() => import('@/components/chat-sdk').then(mod => mod.Chat), { 
+  ssr: false 
+})
 
 var ipRangeCheck = require("ip-range-check");
 
@@ -74,46 +80,43 @@ export default async function ChatbotPage({ params }: ChatbotSettingsProps) {
         )
     }
     
-    const clientSideChatbot: ClientSideChatbotProps = {
+    // Create a minimal version of the chatbot object with only the properties needed
+    const clientSideChatbot: any = {
         id: chatbot.id,
         name: chatbot.name,
         userId: chatbot.userId,
-        openaiId: chatbot.openaiId,
+        openaiId: chatbot.openaiId || '',
         createdAt: chatbot.createdAt,
-        welcomeMessage: chatbot.welcomeMessage,
-        chatbotErrorMessage: chatbot.chatbotErrorMessage,
-        isImported: chatbot.isImported,
-        chatTitle: chatbot.chatTitle,
+        welcomeMessage: chatbot.welcomeMessage || 'Hello! How can I help you today?',
+        chatbotErrorMessage: chatbot.chatbotErrorMessage || "I'm sorry, I encountered an error. Please try again.",
+        isImported: chatbot.isImported || false,
+        chatTitle: chatbot.chatTitle || '',
         chatbotLogoURL: chatbot.chatbotLogoURL || '',
-        chatMessagePlaceHolder: chatbot.chatMessagePlaceHolder,
-        rightToLeftLanguage: chatbot.rightToLeftLanguage,
-        bubbleColor: chatbot.bubbleColor,
-        bubbleTextColor: chatbot.bubbleTextColor,
-        chatHeaderBackgroundColor: chatbot.chatHeaderBackgroundColor,
-        chatHeaderTextColor: chatbot.chatHeaderTextColor,
-        chatbotReplyBackgroundColor: chatbot.chatbotReplyBackgroundColor,
-        chatbotReplyTextColor: chatbot.chatbotReplyTextColor,
-        userReplyBackgroundColor: chatbot.userReplyBackgroundColor,
-        userReplyTextColor: chatbot.userReplyTextColor,
-        chatInputStyle: chatbot.chatInputStyle,
-        inquiryEnabled: chatbot.inquiryEnabled,
-        inquiryLinkText: chatbot.inquiryLinkText,
-        inquiryTitle: chatbot.inquiryTitle,
-        inquirySubtitle: chatbot.inquirySubtitle,
-        inquiryEmailLabel: chatbot.inquiryEmailLabel,
-        inquiryMessageLabel: chatbot.inquiryMessageLabel,
-        inquirySendButtonText: chatbot.inquirySendButtonText,
-        inquiryAutomaticReplyText: chatbot.inquiryAutomaticReplyText,
-        inquiryDisplayLinkAfterXMessage: chatbot.inquiryDisplayLinkAfterXMessage,
-        chatHistoryEnabled: chatbot.chatHistoryEnabled,
-        displayBranding: chatbot.displayBranding,
-        chatFileAttachementEnabled: chatbot.chatFileAttachementEnabled,
-        bannedIps: chatbot.bannedIps,
-        allowEveryone: chatbot.allowEveryone,
-        allowedIpRanges: chatbot.allowedIpRanges,
+        chatMessagePlaceHolder: chatbot.chatMessagePlaceHolder || 'Type a message...',
+        rightToLeftLanguage: chatbot.rightToLeftLanguage || false,
+        bubbleColor: chatbot.bubbleColor || '#FFFFFF',
+        bubbleTextColor: chatbot.bubbleTextColor || '#000000',
+        chatHeaderBackgroundColor: chatbot.chatHeaderBackgroundColor || '#FFFFFF',
+        chatHeaderTextColor: chatbot.chatHeaderTextColor || '#000000',
+        chatbotReplyBackgroundColor: chatbot.chatbotReplyBackgroundColor || '#e4e4e7',
+        chatbotReplyTextColor: chatbot.chatbotReplyTextColor || '#000000',
+        userReplyBackgroundColor: chatbot.userReplyBackgroundColor || '#e4e4e7',
+        userReplyTextColor: chatbot.userReplyTextColor || '#000000',
+        chatInputStyle: chatbot.chatInputStyle || 'default',
+        inquiryEnabled: chatbot.inquiryEnabled || false,
+        inquiryLinkText: chatbot.inquiryLinkText || 'Contact our support team',
+        inquiryDisplayLinkAfterXMessage: chatbot.inquiryDisplayLinkAfterXMessage || 1,
+        chatHistoryEnabled: chatbot.chatHistoryEnabled || false,
+        displayBranding: chatbot.displayBranding || true,
+        chatFileAttachementEnabled: chatbot.chatFileAttachementEnabled || false,
+        bannedIps: chatbot.bannedIps || [],
+        allowEveryone: chatbot.allowEveryone || true,
+        allowedIpRanges: chatbot.allowedIpRanges || [],
+        apiVersion: 'v2',
+        preserveHistory: true
     }
 
     return (
-        <Chat chatbot={clientSideChatbot} withExitX={params.withExitX} defaultMessage={params.defaultMessage || ""} clientSidePrompt={params.clientSidePrompt || ""}></Chat>
+        <ClientSideChat chatbot={clientSideChatbot} withExitX={params.withExitX} defaultMessage={params.defaultMessage || ""} clientSidePrompt={params.clientSidePrompt || ""}></ClientSideChat>
     )
 }

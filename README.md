@@ -161,3 +161,56 @@ npx prisma generate
 ```
 
 This will create the necessary `ConversationSummary` table in your database and update the Prisma client to include the new model.
+
+## Database Update Commands
+
+To update your database schema with the new training-related fields, run the following commands:
+
+```bash
+# Generate the Prisma client based on your schema
+npx prisma generate
+
+# Push the schema changes to your database
+npx prisma db push
+
+# If you need to reset your database (WARNING: This will delete all data)
+# npx prisma migrate reset
+
+# To view your database in the Prisma Studio UI
+# npx prisma studio
+```
+
+These commands will:
+1. Generate the updated Prisma client with the new schema
+2. Push the schema changes to your database without requiring a migration
+
+After running these commands, restart your development server:
+
+```bash
+npm run dev
+```
+
+## Knowledge Integration Features
+
+The system now includes a comprehensive knowledge integration strategy with four phases:
+
+### Phase 1: Basic Integration
+- Train Agent button in the LLM tab
+- Knowledge source selection
+- Basic file processing
+
+### Phase 2: Content Processing
+- Support for multiple content types (files, text, Q&A, websites, catalogs)
+- Content combination for context
+- Training status tracking
+
+### Phase 3: Advanced Knowledge Processing
+- Smart caching to avoid reprocessing unchanged content
+- Text chunking for better retrieval
+- Table of contents generation
+
+### Phase 4: Optimization and User Experience
+- Training options (Force Retrain, Optimize for Speed)
+- Progress indicators and detailed status messages
+- Keyword extraction and metadata optimization
+- Cross-referencing between knowledge sources
